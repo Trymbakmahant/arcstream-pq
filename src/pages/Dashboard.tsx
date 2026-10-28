@@ -76,19 +76,23 @@ function Workspace() {
       </div>
 
       {tab === 'employer' ? (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-          <CreateEscrowCard />
-          <EscrowList
-            title="Active Escrows"
-            role="employer"
-            escrows={asEmployer}
-            isLoading={isLoading}
-            isError={isError}
-            emptyCopy="Escrows you create will show up here with their milestones and any submitted work."
-            onSubmitWork={onSubmitWork}
-            onViewDetails={onViewDetails('employer')}
-            onPqAuth={setPqRequest}
-          />
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-start">
+          <div className="min-w-0">
+            <CreateEscrowCard />
+          </div>
+          <div className="min-w-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:pr-1 custom-scrollbar">
+            <EscrowList
+              title="Active Escrows"
+              role="employer"
+              escrows={asEmployer}
+              isLoading={isLoading}
+              isError={isError}
+              emptyCopy="Escrows you create will show up here with their milestones and any submitted work."
+              onSubmitWork={onSubmitWork}
+              onViewDetails={onViewDetails('employer')}
+              onPqAuth={setPqRequest}
+            />
+          </div>
         </div>
       ) : (
         <div className="mx-auto max-w-3xl">
