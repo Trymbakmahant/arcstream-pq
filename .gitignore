@@ -1,0 +1,29 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Production builds
+dist/
+dist-ssr/
+*.local
+
+# Foundry & contract compilation artifacts
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+out/
+cache/
+broadcast/
+
+# Logs & debugging traces
+*.log
+console.jsonl
+traces.jsonl
+
+# Operating System files
+.DS_Store
+Thumbs.db

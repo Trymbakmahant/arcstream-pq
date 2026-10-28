@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #e8e9df;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: 'DM Sans', sans-serif;
+  background: #e8e9df;
+  color: #2e3d28;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .display {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  .label-caps {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(46, 61, 40, 0.2);
+    background: #ffffff;
+    padding: 0.625rem 0.875rem;
+    color: #2e3d28;
+    outline: none;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .field::placeholder {
+    color: rgba(46, 61, 40, 0.45);
+  }
+
+  .field:focus {
+    border-color: #a9bb87;
+    box-shadow: 0 0 0 3px rgba(169, 187, 135, 0.55);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.875rem;
+    background: #2e3d28;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e8e9df;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.875rem;
+    border: 1px solid #a9bb87;
+    background: transparent;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2e3d28;
+    transition: background 0.12s ease;
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(169, 187, 135, 0.3);
+  }
+
+  .btn-ghost:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
