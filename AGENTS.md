@@ -52,7 +52,11 @@ bun run dev
 
 ## Mainnet
 
-- Arc Studio does not deploy to mainnet. `docs/mainnet-deploy.md` has the user-run `arc-forge create` command; `src/contracts/mainnet.ts` holds reference values (address and tx hash stay undefined until the user supplies them); `bun run mainnet:check <address>` is a read-only post-deploy review.
+- ArcStreamVault (Arc Mainnet, Chain ID 5042): 0xbe207b904f08036A483E15a46eE476A712944cBF
+  - tx 0x68b205b803c768c2a42ebcb283c0a8489c14788a3a6f6af75eade87d9a1fee3f
+  - Constructor arg: USDC 0x3600000000000000000000000000000000000000
+  - Verified with `bun run mainnet:check 0xbe207b904f08036A483E15a46eE476A712944cBF` (7/7 checks passed).
+- Arc Studio does not deploy to mainnet. `docs/mainnet-deploy.md` has the user-run `arc-forge create` command; `src/contracts/mainnet.ts` is wired with the live deployment address and tx hash.
 - Funding UX: the Fund with USDC modal (testnet faucet link, mainnet CCTP/bridge docs). No Circle Onramp backend and no Gas Station by decision; Arc gas is USDC.
 - Network switch: `src/lib/network.ts` holds Arc Testnet and Arc Mainnet settings; the choice is stored in localStorage (`arcstream.network`) and switching reloads the app. Mainnet vault/tx hash come from `src/contracts/mainnet.ts` (still undefined until the user deploys); until then mainnet shows the not-deployed state.
 - Circle Onramp: Arc Testnet embeds the Onramp sandbox widget inside the Fund modal (`OnrampSection.tsx`); a Bun API in `server/onramp.ts` (run `bun run dev:api`, port 8787, proxied at `/api` by `vite.config.ts`) mints sessions with `CIRCLE_API_KEY` after the wallet signs a short proof message. Arc Mainnet shows a button to Arc's hosted page `portal.arc.io/deposit/fiat` (no key). Sandbox may not deliver USDC on Arc Testnet; production cards need a mainnet key plus KYB. The API server must be running wherever the app is hosted for the embedded widget.

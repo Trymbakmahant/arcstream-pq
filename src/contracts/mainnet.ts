@@ -19,5 +19,5 @@ export const ARC_MAINNET = {
  * Fill these in only after YOU deploy ArcStreamVault to Arc Mainnet from your own wallet
  * (see docs/mainnet-deploy.md). Arc Studio does not deploy to mainnet.
  */
-export const MAINNET_VAULT_ADDRESS: Address | undefined = undefined
-export const MAINNET_DEPLOY_TX: Hex | undefined = undefined
+export const MAINNET_VAULT_ADDRESS: Address | undefined = '0xbe207b904f08036A483E15a46eE476A712944cBF'
+export const MAINNET_DEPLOY_TX: Hex | undefined = '0x68b205b803c768c2a42ebcb283c0a8489c14788a3a6f6af75eade87d9a1fee3f'

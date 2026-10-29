@@ -68,12 +68,11 @@ ArcStream-PQ is an institutional-grade, noncustodial USDC milestone escrow proto
 
 ## 🚀 Deployed Contracts
 
-| Network | Contract | Address | Explorer / Precompile |
-| :--- | :--- | :--- | :--- |
+| **Arc Mainnet** (5042) | `ArcStreamVault` | `0xbe207b904f08036A483E15a46eE476A712944cBF` | [View on Arc Explorer](https://explorer.arc.io/address/0xbe207b904f08036A483E15a46eE476A712944cBF) |
+| **Arc Mainnet Deploy Tx** | `Deployment Tx` | `0x68b205b8...fee3f` | [View Tx on Arc Explorer](https://explorer.arc.io/tx/0x68b205b803c768c2a42ebcb283c0a8489c14788a3a6f6af75eade87d9a1fee3f) |
+| **Arc Mainnet PQ Precompile** | `IArcPQ (FIPS 205)` | `0x1800000000000000000000000000000000000004` | Native Protocol Precompile (`verifySlhDsaSha2128s`) |
 | **Arc Testnet** (5042002) | `ArcStreamVault` | `0x464504fe41fef085413c52cfc6fdbeb15637c0fd` | [View on Arc Explorer](https://explorer.testnet.arc.io/address/0x464504fe41fef085413c52cfc6fdbeb15637c0fd) |
-| **Arc Testnet PQ Precompile** | `IArcPQ (FIPS 205)` | `0x1800000000000000000000000000000000000004` | Native Protocol Precompile (`verifySlhDsaSha2128s`) |
 | **Official USDC** | Native ERC-20 View | `0x3600000000000000000000000000000000000000` | Native USDC (6 Decimals) |
-| **Arc Mainnet** (5042) | Configured in App | Dynamic Switcher | Ready for deployment (`docs/mainnet-deploy.md`) |
 
 *Superseded deployments: `0x885ffa04b92eaa3d0fd11c3b05f425bcbe26de53`, `0xbfeba9a6fe6b81f583417d426a3957d713f30965`.*
 
