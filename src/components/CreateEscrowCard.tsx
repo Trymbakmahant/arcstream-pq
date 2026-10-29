@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ConnectKitButton } from 'connectkit'
 import { useAccount, useSwitchChain } from 'wagmi'
-import { getAddress, isAddress, zeroHash, type Hex } from 'viem'
+import { getAddress, isAddress, type Hex } from 'viem'
 import { Eye, Fingerprint, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ARC_CHAIN_ID } from '@/config'
@@ -10,7 +10,7 @@ import { useUsdcBalance } from '@/hooks/useUsdc'
 import { useVaultActions } from '@/hooks/useVaultActions'
 import { usePasskey } from '@/hooks/usePasskey'
 import { fingerprint as shortHash } from '@/lib/pq'
-import { BiometricError, createEscrowCommitment, isInsideFrame } from '@/lib/webauthn'
+import { BiometricError, createPqPublicKey, isInsideFrame } from '@/lib/webauthn'
 import { fmtUsdc, parseUsdc } from '@/lib/money'
 import { MAX_DESCRIPTION_LENGTH } from '@/lib/text'
 import { RichText } from '@/components/RichText'
@@ -28,7 +28,7 @@ interface Row {
 let rowKey = 0
 const newRow = (): Row => ({ key: rowKey++, amount: '', description: '', mode: 'write' })
 
-export function CreateEscrowCard() {
+export function CreateEscrowCard({ onCreated }: { onCreated?: () => void }) {
   const { address, isConnected, chainId } = useAccount()
   const { switchChain } = useSwitchChain()
   const { data: balance } = useUsdcBalance()
@@ -82,10 +82,10 @@ export function CreateEscrowCard() {
     if (problem || !contractorValid || !address || !VAULT_ADDRESS) return
     setSubmitting(true)
     try {
-      let commitment: Hex = zeroHash
+      let pqPublicKey: Hex = '0x'
       if (useBiometric) {
         try {
-          commitment = await createEscrowCommitment(address, VAULT_ADDRESS, ARC_CHAIN_ID, rows.length)
+          pqPublicKey = await createPqPublicKey(address)
         } catch (error) {
           toast.error(error instanceof BiometricError ? error.message : 'Biometric authorization failed.')
           return
@@ -95,11 +95,12 @@ export function CreateEscrowCard() {
         getAddress(contractor),
         parsedAmounts.map((a) => a ?? 0n),
         rows.map((r) => r.description.trim()),
-        commitment,
+        pqPublicKey,
       )
       if (ok) {
         setContractor('')
         setRows([newRow(), newRow()])
+        onCreated?.()
       }
     } finally {
       setSubmitting(false)
@@ -251,7 +252,7 @@ export function CreateEscrowCard() {
             onChange={(e) => setUseBiometric(e.target.checked)}
           />
           <span className="text-sm font-semibold text-brandHighlight">
-            Secure with Face ID / Touch ID (hash-based hardware lock)
+            Secure with Face ID / Touch ID (post-quantum signature lock)
           </span>
         </label>
         {useBiometric && (
@@ -283,8 +284,8 @@ export function CreateEscrowCard() {
             )}
             <p>
               Touch ID / Face ID is then required for the employer to release a payout or refund. The wallet key
-              alone cannot do either on this escrow. The lock uses one-time hash secrets, so a stolen wallet key
-              still could approve milestones (which pays the contractor).
+              alone cannot do either on this escrow. Arc verifies a post-quantum SLH-DSA signature that your
+              passkey unlocks. A stolen wallet key could still approve milestones, which pays the contractor.
             </p>
           </div>
         )}

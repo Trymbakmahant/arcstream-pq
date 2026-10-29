@@ -32,8 +32,8 @@ const STATS = [
   },
   {
     icon: Fingerprint,
-    title: 'Biometric hardware lock',
-    body: 'Touch ID or Face ID unlocks the one-time secret needed to release or refund a protected escrow.',
+    title: 'Post-quantum signature lock',
+    body: 'Touch ID or Face ID unlocks an SLH-DSA key (FIPS 205). Arc verifies its signature before an employer can release or refund.',
   },
 ]
 
@@ -57,12 +57,12 @@ export function Hero() {
           Pay for finished work, milestone by milestone.
         </h1>
         <p className="display mt-2 text-balance text-2xl font-medium text-brandHighlight/70 sm:text-3xl">
-          With a biometric lock on every payout.
+          With a post-quantum signature on every release.
         </p>
 
         <p className="mx-auto mt-6 max-w-2xl text-pretty text-base text-brandHighlight/80 sm:text-lg">
-          A noncustodial USDC milestone escrow on Arc. Employer releases and refunds can require Touch ID or Face
-          ID plus a hash-based one-time secret, and the contract checks the proof before any funds move.
+          A noncustodial USDC milestone escrow on Arc. Employer releases and refunds can require a post-quantum
+          SLH-DSA signature, unlocked with Touch ID or Face ID and verified by Arc's native precompile.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

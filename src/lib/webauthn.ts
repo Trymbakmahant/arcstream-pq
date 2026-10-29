@@ -1,16 +1,17 @@
 import { bytesToHex, hexToBytes, keccak256, toHex, type Address, type Hex } from 'viem'
-import { buildProof, computeRoot, type PqContext, type PqRecord } from '@/lib/pq'
+import { derivePublicKey, signDigest, signingMessage } from '@/lib/pq'
 
 /**
- * Touch ID / Face ID (WebAuthn passkey) as the unlock for the hash-based one-time secrets.
+ * Touch ID / Face ID (WebAuthn passkey) as the unlock for the post-quantum signing key.
  *
  * What this is: the passkey (a P-256 platform credential) proves a person is present and verified on
  * this device. When the browser supports the WebAuthn PRF extension, the passkey also derives a stable
- * 32-byte master secret, so nothing secret is stored. Without PRF, a random master secret is kept in
- * localStorage and the biometric prompt only gates access to it.
+ * 32-byte master secret, so nothing secret is stored. The SLH-DSA-SHA2-128s signing key is derived from
+ * that master secret in memory each time and discarded (see lib/pq.ts). Without PRF, a random master
+ * secret is kept in localStorage and the biometric prompt only gates access to it.
  *
- * What it is not: the passkey signature is never sent onchain and P-256 is not post-quantum. The
- * onchain check is the keccak256 Merkle proof of a one-time secret (see lib/pq.ts).
+ * What it is not: the passkey's own P-256 signature is never sent onchain and is not post-quantum. The
+ * onchain check is the SLH-DSA signature, verified by Arc's native PQ Signature Verify precompile.
  */
 
 export type BiometricErrorCode =
@@ -19,7 +20,7 @@ export type BiometricErrorCode =
   | 'CANCELLED'
   | 'PRF_UNAVAILABLE'
   | 'KEY_MISMATCH'
-  | 'NO_RECORD'
+  | 'SIGNING_FAILED'
 
 export class BiometricError extends Error {
   readonly code: BiometricErrorCode
@@ -40,7 +41,6 @@ interface StoredPasskey {
 
 const PRF_SALT = new TextEncoder().encode('arcstream-pq/v1/master')
 const passkeyKey = (address: string) => `arcstream.passkey.v1.${address.toLowerCase()}`
-const recordsKey = (address: string) => `arcstream.pq-records.v1.${address.toLowerCase()}`
 const CHANGE_EVENT = 'arcstream:passkey-changed'
 
 const b64urlEncode = (bytes: Uint8Array) =>
@@ -110,8 +110,8 @@ function translate(error: unknown): never {
 
 /**
  * Creates a Touch ID / Face ID platform passkey for this wallet address and stores its id locally.
- * Returns a fingerprint (keccak256 of the credential id). The per-escrow commitment is derived later,
- * when an escrow is created, so it can bind to that escrow's milestones.
+ * Returns a fingerprint (keccak256 of the credential id). The post-quantum public key is derived later,
+ * when an escrow is created.
  */
 export async function registerBiometricPQKey(userAddress: Address): Promise<{ fingerprint: Hex; prf: boolean }> {
   if (!isPasskeySupported()) {
@@ -198,62 +198,47 @@ async function unlockMaster(userAddress: Address): Promise<Hex> {
   }
 }
 
-function readRecords(address: string): Record<string, PqRecord> {
+/**
+ * Touch ID / Face ID prompt, then derives the 32-byte SLH-DSA-SHA2-128s public key to pass as
+ * pqPublicKey when creating an escrow. The same passkey always yields the same key.
+ */
+export async function createPqPublicKey(userAddress: Address): Promise<Hex> {
+  const master = await unlockMaster(userAddress)
   try {
-    const raw = localStorage.getItem(recordsKey(address))
-    return raw ? (JSON.parse(raw) as Record<string, PqRecord>) : {}
-  } catch {
-    return {}
+    return await derivePublicKey(master)
+  } catch (error) {
+    throw new BiometricError('SIGNING_FAILED', error instanceof Error ? error.message : 'Could not derive the post-quantum key.')
   }
 }
 
-export const hasRecordFor = (address: string, commitment: string): boolean =>
-  !!readRecords(address)[commitment.toLowerCase()]
-
 /**
- * Touch ID / Face ID prompt, then builds the Merkle root to pass as pqCommitment when creating an
- * escrow. The non-secret nonce and milestone count are saved so proofs can be rebuilt later.
- */
-export async function createEscrowCommitment(
-  userAddress: Address,
-  vault: Address,
-  chainId: number,
-  milestoneCount: number,
-): Promise<Hex> {
-  const master = await unlockMaster(userAddress)
-  const record: PqRecord = { nonce: bytesToHex(randomBytes(32)), milestoneCount, createdAt: Date.now() }
-  const root = computeRoot({ master, record, chainId, vault, employer: userAddress })
-  const records = readRecords(userAddress)
-  records[root.toLowerCase()] = record
-  localStorage.setItem(recordsKey(userAddress), JSON.stringify(records))
-  return root
-}
-
-/**
- * Touch ID / Face ID prompt, then returns the pqProof bytes for one protected action.
- * action is the milestone index for a release, or the milestone count for a refund.
+ * Touch ID / Face ID prompt, then signs one protected action with the derived post-quantum key and
+ * returns the 7,856-byte signature to pass as pqProof. action is the milestone index for a release, or
+ * the milestone count for a refund. publicKey is the key stored in the escrow; the derived key must match it.
  */
 export async function signWithBiometricPQKey(args: {
   userAddress: Address
   vault: Address
   chainId: number
-  commitment: Hex
+  escrowId: bigint
   action: number
+  publicKey: Hex
 }): Promise<Hex> {
-  const record = readRecords(args.userAddress)[args.commitment.toLowerCase()]
-  if (!record) {
-    throw new BiometricError('NO_RECORD', 'This escrow was protected from a different browser or device, so its secrets are not here.')
-  }
   const master = await unlockMaster(args.userAddress)
-  const ctx: PqContext = {
-    master,
-    record,
+  const message = signingMessage({
     chainId: args.chainId,
     vault: args.vault,
-    employer: args.userAddress,
+    escrowId: args.escrowId,
+    action: args.action,
+  })
+  try {
+    const { signature, publicKey } = await signDigest(master, message)
+    if (publicKey.toLowerCase() !== args.publicKey.toLowerCase()) {
+      throw new BiometricError('KEY_MISMATCH', 'This passkey does not match the one that protected this escrow.')
+    }
+    return signature
+  } catch (error) {
+    if (error instanceof BiometricError) throw error
+    throw new BiometricError('SIGNING_FAILED', error instanceof Error ? error.message : 'Post-quantum signing failed.')
   }
-  if (computeRoot(ctx).toLowerCase() !== args.commitment.toLowerCase()) {
-    throw new BiometricError('KEY_MISMATCH', 'This passkey does not match the one that protected this escrow.')
-  }
-  return buildProof(ctx, args.action)
 }

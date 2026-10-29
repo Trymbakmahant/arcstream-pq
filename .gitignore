@@ -27,3 +27,7 @@ traces.jsonl
 # Operating System files
 .DS_Store
 Thumbs.db
+
+# Arc Studio CLI local state
+.arc-studio/
+

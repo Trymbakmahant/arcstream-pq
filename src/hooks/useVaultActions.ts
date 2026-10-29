@@ -1,5 +1,5 @@
 import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
-import { erc20Abi, zeroHash, type Address, type Hex } from 'viem'
+import { erc20Abi, type Address, type Hex } from 'viem'
 import { ARC_CHAIN_ID } from '@/config'
 import { USDC_ADDRESS, VAULT_ADDRESS, arcStreamVaultAbi } from '@/contracts/vault'
 import { useTx } from '@/components/txContext'
@@ -20,7 +20,7 @@ export function useVaultActions() {
     contractor: Address,
     amounts: bigint[],
     descriptions: string[],
-    pqCommitment: Hex = zeroHash,
+    pqPublicKey: Hex = '0x',
   ) => {
     const vault = requireVault()
     const total = amounts.reduce((sum, a) => sum + a, 0n)
@@ -54,7 +54,7 @@ export function useVaultActions() {
             address: vault,
             abi: arcStreamVaultAbi,
             functionName: 'createEscrow',
-            args: [contractor, amounts, descriptions, pqCommitment],
+            args: [contractor, amounts, descriptions, pqPublicKey],
           }),
       },
     ])
@@ -75,9 +75,36 @@ export function useVaultActions() {
       },
     ])
 
-  /** pqProof is only checked when the employer releases a protected escrow; contractors pass 0x. */
+  /** pqProof (SLH-DSA signature) is only checked when the employer releases a protected escrow; contractors pass 0x. */
   const releaseMilestone = (escrowId: bigint, index: number, pqProof: Hex = '0x') =>
     runFlow('Claim payout', [
+      {
+        label: `Release milestone ${index + 1} to contractor`,
+        send: () =>
+          writeContractAsync({
+            chainId: ARC_CHAIN_ID,
+            address: requireVault(),
+            abi: arcStreamVaultAbi,
+            functionName: 'releaseMilestone',
+            args: [escrowId, BigInt(index), pqProof],
+          }),
+      },
+    ])
+
+  /** Employer shortcut: approve a submitted milestone, then release it, as two confirmations in one flow. */
+  const approveAndRelease = (escrowId: bigint, index: number, pqProof: Hex = '0x') =>
+    runFlow('Approve and release payout', [
+      {
+        label: `Approve milestone ${index + 1}`,
+        send: () =>
+          writeContractAsync({
+            chainId: ARC_CHAIN_ID,
+            address: requireVault(),
+            abi: arcStreamVaultAbi,
+            functionName: 'approveMilestone',
+            args: [escrowId, BigInt(index)],
+          }),
+      },
       {
         label: `Release milestone ${index + 1} to contractor`,
         send: () =>
@@ -121,5 +148,5 @@ export function useVaultActions() {
       },
     ])
 
-  return { createEscrow, approveMilestone, releaseMilestone, submitWork, refundRemaining }
+  return { createEscrow, approveMilestone, releaseMilestone, approveAndRelease, submitWork, refundRemaining }
 }

@@ -18,31 +18,38 @@ USDC milestone escrow on Arc Testnet. Employers fund escrows, contractors submit
 
 ## Deployments
 
-- ArcStreamVault (Arc Testnet, current, with biometric second factor): 0xbfeba9a6fe6b81f583417d426a3957d713f30965
-  - tx 0x0d8a668fc76ac942d4436ef4c9314e5df46d95bbdc19bd84c60ec27a2d12d87a
-- Superseded (no second factor, no escrows): 0xb6ed26ff733fe4f66cc4015126707c6e5b04e497
+- ArcStreamVault (Arc Testnet, current, with Arc Native SLH-DSA-SHA2-128s PQ Precompile): 0x885ffa04b92eaa3d0fd11c3b05f425bcbe26de53
+  - tx: 0x87239976031b6b7fc60da6105e9679e7b5f2c669fe654871b0f16136f3d6118f
+  - explorer: https://explorer.testnet.arc.io/address/0x885ffa04b92eaa3d0fd11c3b05f425bcbe26de53
+  - Precompile: Arc Native PQ Signature Verify (0x1800000000000000000000000000000000000004)
+- Superseded:
+  - 0xbfeba9a6fe6b81f583417d426a3957d713f30965 (Merkle tree one-time hash commitments)
+  - 0xb6ed26ff733fe4f66cc4015126707c6e5b04e497 (No second factor)
   - constructor arg: USDC 0x3600000000000000000000000000000000000000
-  - Wired in `src/contracts/vault.ts` (address) and `src/contracts/arcStreamVaultAbi.ts` (ABI from forge artifact)
+  - Wired in `src/contracts/vault.ts` and `src/contracts/arcStreamVaultAbi.ts`
 
 ## Key Files
 
-- Routes (tiny History API router in `src/lib/router.tsx`): `/` landing (`src/pages/Landing.tsx`, `src/components/landing/`), `/dashboard` product (`src/pages/Dashboard.tsx`). Hosts need an SPA fallback.
-
-- `src/App.tsx` - tabs (Employer / Contractor)
-- `src/components/` - UI (Header, CreateEscrowCard, EscrowCard, SubmitWorkModal, TxProvider)
-- `src/hooks/` - contract reads/writes
-- `src/config.ts` - wagmi config
-- No injected `@/onchain-facts` / `@/onchain-money` helpers exist in this project; do not import them.
+- Routes (tiny History API router in `src/lib/router.tsx`): `/` landing (`src/pages/Landing.tsx`, `src/components/landing/`), `/dashboard` product (`src/pages/Dashboard.tsx`).
+- `src/components/dashboard/` - Redesigned Dashboard UI (Sidebar, TopBar, StatCards, EscrowsPanel, EscrowTable, CreateEscrowModal, PanelStates)
+- `src/components/` - Common UI (TaskDetailsDrawer, SubmitWorkModal, PqAuthModal, TxProvider)
+- `src/hooks/` - contract reads/writes (`useEscrows`, `useVaultActions`, `usePasskey`, etc.)
+- `src/lib/pq.ts` & `src/lib/pq.worker.ts` - SLH-DSA-SHA2-128s key derivation and background worker signing
+- `scripts/verify-pq-precompile.ts` - Live Arc Testnet verification (`bun run pq:check`)
 
 ## To Run
 
 ```bash
 bun install
-bun run dev
+bun run dev          # Local Vite dev server
+bun run pq:check     # Test PQ precompile live on Arc Testnet
+bun run contracts:test # Run Forge contract test suite
+bun run typecheck    # TypeScript verification
 ```
 
-## Biometric second factor (how it really works)
+## Post-Quantum Second Factor (How it Works)
 
-- Contract: optional `pqCommitment` (Merkle root of one-time hash secrets) per escrow. Employer `releaseMilestone` (action = milestone index) and `refundRemaining` (action = milestoneCount) must pass `abi.encode(bytes32 secret, bytes32[] path)`. Contractor claims never need it.
-- Browser: `src/lib/webauthn.ts` uses a Touch ID / Face ID platform passkey (WebAuthn, PRF extension when available) to unlock a master secret; `src/lib/pq.ts` builds the tree and proofs. Proofs are cross-checked against the contract in `contracts/test/ArcStreamVault.TsVector.t.sol`.
-- Honest limits: the passkey signature is never verified onchain and P-256 is not post-quantum; protection comes from the hash commitments. A stolen wallet key can still approve milestones (which pays the contractor). Secrets live per browser/passkey: losing it blocks employer release/refund (mutualCancel is the recovery path). WebAuthn is usually blocked inside the Arc Studio preview iframe; test in its own tab.
+- **Contract**: Optional `pqPublicKey` (32 bytes) per escrow. Employer `releaseMilestone` (action = milestone index) and `refundRemaining` (action = milestoneCount) staticcalls Arc's native precompile `0x1800000000000000000000000000000000000004` (`verifySlhDsaSha2128s`) with the 32-byte domain-bound digest `pqSigningMessage(escrowId, action)`.
+- **Browser**: `src/lib/webauthn.ts` uses Touch ID / Face ID platform passkey (WebAuthn PRF extension) to unlock a 32-byte master secret; `src/lib/pq.ts` and `src/lib/pq.worker.ts` derive the SLH-DSA keypair in-memory on demand and sign the action digest.
+- **Security**: The signing key is never persisted in storage. Replaying transactions or mempool snooping cannot steal funds or redirect payouts.
+

@@ -4,7 +4,14 @@ pragma solidity ^0.8.24;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+
+/// @notice Selector-only interface for Arc's native SLH-DSA-SHA2-128s (FIPS 205) verifier.
+interface IArcPQ {
+    function verifySlhDsaSha2128s(bytes calldata vk, bytes calldata message, bytes calldata sig)
+        external
+        view
+        returns (bool);
+}
 
 /// @title ArcStreamVault
 /// @notice Noncustodial milestone approval and payment accounting for ERC-20 USDC.
@@ -32,25 +39,25 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
 /// At transaction boundaries, for standard USDC:
 /// balanceOf(this) >= sum(totalDeposited - totalReleased - refundedAmounts) over all escrows.
 /// Direct token donations are not assigned to an escrow and cannot be recovered.
-/// Optional "PQ 2FA" is a hash-based (keccak256 Merkle one-time-secret) second factor;
-/// its security rests on secret secrecy until use. The employer chooses an immutable Merkle
-/// root at creation, with one distinct secret per action: milestoneIndex for release and
-/// milestoneCount for refund. Leaves are keccak256(bytes.concat(keccak256(abi.encode(block.chainid,
-/// address(this), agreement.employer, action, secret)))), with uint256 chainid and action,
-/// address vault and employer, and bytes32 secret; Merkle pairs are sorted and commutative.
-/// Clients must build leaves with the chainid, vault address, and employer address.
-/// Each nonzero root can be used for only one escrow per employer in this vault.
-/// Proofs are abi.encode(bytes32 secret, bytes32[] path), with at most MAX_PQ_PROOF_DEPTH siblings.
-/// Malformed ABI offsets may revert without data. Each secret is revealed in its transaction
-/// and must be treated as burned afterwards; never reuse secrets across actions or escrows.
-/// Proofs are not bound to transaction data: a leaked-in-mempool proof can only trigger the
-/// same action on its escrow, paying the current contractor for release or employer for refund;
-/// callers cannot supply alternative payout destinations. Do not reuse commitments across escrows.
-/// This protects employer-initiated release and refund only. Gating mutualCancel,
-/// claimSettlement, updateContractor, approveMilestone, or submitMilestoneWork is an explicit
-/// non-goal. Losing secrets blocks employer-initiated releases and refunds on that escrow;
-/// contractor claims remain available without proofs, and mutualCancel is the cooperative
-/// recovery path. The commitment cannot be changed afterwards.
+/// Optional PQ 2FA uses SLH-DSA-SHA2-128s (FIPS 205), a hash-based post-quantum signature,
+/// verified by Arc's native precompile on Arc Testnet (chain 5042002) and Arc mainnet.
+/// The signed message is exactly the 32-byte pqSigningMessage digest, binding PQ_DOMAIN,
+/// chainid, this vault, escrow id, and action (milestone index for release, milestoneCount
+/// for refund). The employer selects an immutable 32-byte public key and is responsible
+/// for custody of its secret key. SLH-DSA is stateless; one key may protect many escrows.
+/// pqCommitment is keccak256(pqPublicKey), a UI/event fingerprint, not a separate secret.
+/// Protection guards only employer-initiated release and refund. approveMilestone,
+/// submitMilestoneWork, mutualCancel, claimSettlement, and updateContractor remain wallet-key
+/// (ECDSA) only by design; adding PQ protection to them is an explicit non-goal. A stolen
+/// wallet key can still approve milestones (enabling payment to the contractor), but cannot
+/// initiate release or refund of a protected escrow without a valid PQ signature.
+/// Losing the PQ secret key blocks employer release/refund; contractor claims remain
+/// proof-free and mutualCancel remains the cooperative recovery path. If a hardfork ever
+/// disables the precompile, protected employer actions fail; mutualCancel is the recovery path.
+/// Signatures are not bound to transaction senders: a signature seen in the mempool can only
+/// trigger the same single action, with release paying the current contractor and refund
+/// paying the employer, never a caller-selected destination. Existing authorization still
+/// applies. Protected release/refund costs roughly 380k gas including signature calldata.
 contract ArcStreamVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -78,6 +85,7 @@ contract ArcStreamVault is ReentrancyGuard {
         bool isTerminated;
         bytes32 pqCommitment;
         bool isPQProtected;
+        bytes pqPublicKey;
     }
 
     error Unauthorized();
@@ -102,10 +110,11 @@ contract ArcStreamVault is ReentrancyGuard {
     error NotSettled();
     error InvalidSplit();
     error InvalidQuantumProof();
-    error CommitmentAlreadyUsed();
+    error InvalidPQPublicKey();
+    error PQPrecompileUnavailable();
 
-    /// @notice A Merkle one-time-secret proof was verified; milestoneIndex is the action index.
-    /// @dev Refund actions use the agreement's milestoneCount instead of a milestone index.
+    /// @notice An SLH-DSA-SHA2-128s signature was verified; milestoneIndex is the action index.
+    /// @dev Refund actions use milestoneCount; pqCommitment is the public key's keccak256 fingerprint.
     event QuantumProofVerified(uint256 indexed escrowId, uint256 milestoneIndex, bytes32 pqCommitment);
 
     event EscrowCreated(
@@ -135,8 +144,17 @@ contract ArcStreamVault is ReentrancyGuard {
     /// @notice Maximum proof length in bytes.
     uint256 public constant MAX_WORK_PROOF_LENGTH = 256;
 
-    /// @notice Maximum sibling count in a Merkle one-time-secret proof path.
-    uint256 public constant MAX_PQ_PROOF_DEPTH = 8;
+    /// @notice Arc's native SLH-DSA-SHA2-128s (FIPS 205) signature verification precompile.
+    address public constant ARC_PQ_PRECOMPILE = address(0x1800000000000000000000000000000000000004);
+
+    /// @notice Required SLH-DSA-SHA2-128s public key length in bytes.
+    uint256 public constant PQ_PUBLIC_KEY_LENGTH = 32;
+
+    /// @notice Required SLH-DSA-SHA2-128s signature length in bytes.
+    uint256 public constant PQ_SIGNATURE_LENGTH = 7856;
+
+    /// @notice Domain separator included in every PQ signing digest.
+    bytes32 public constant PQ_DOMAIN = keccak256("ArcStreamVault.PQ.v1");
 
     /// @notice Maximum number of milestones in a single escrow.
     uint256 public constant MAX_MILESTONES = 50;
@@ -179,9 +197,6 @@ contract ArcStreamVault is ReentrancyGuard {
     /// @notice Unclaimed settlement credit belonging to the employer, who cannot rotate.
     mapping(uint256 escrowId => uint256 amount) public employerSettlementOwed;
 
-    /// @notice Whether an employer has already used a nonzero root for an escrow in this vault.
-    mapping(address employer => mapping(bytes32 commitment => bool used)) public pqCommitmentUsed;
-
     /// @notice Select the ERC-20 USDC contract used by all escrows.
     /// @dev Deployment must select genuine six-decimal USDC; metadata is not consulted.
     /// @param usdcAddress Token contract address, not the native gas-token identifier.
@@ -193,39 +208,41 @@ contract ArcStreamVault is ReentrancyGuard {
     /// @notice Fund a new escrow with the caller as employer.
     /// @dev Requires an existing allowance for the sum of amounts. Nonexact token receipts
     /// revert atomically. Solidity checked arithmetic rejects an overflowing total.
-    /// A nonzero employer-chosen root enables a hash-based Merkle one-time-secret second factor
-    /// for employer-initiated release and refund only; the commitment cannot be changed afterwards.
-    /// Each nonzero root can be used for only one escrow per employer in this vault; reuse by
-    /// the caller reverts CommitmentAlreadyUsed. Other employers cannot reserve the caller's root.
-    /// Use distinct, private secrets and leaves keccak256(bytes.concat(keccak256(abi.encode(
-    /// block.chainid, address(this), agreement.employer, action, secret)))), where chainid and
-    /// action are uint256 (action is the milestone index, or amounts.length for refund), vault
-    /// and employer are address, and secret is bytes32. Clients must build leaves with the
-    /// chainid, this vault's address, and the caller's employer address. Use sorted Merkle pairs
-    /// and paths of at most MAX_PQ_PROOF_DEPTH siblings.
-    /// Calls use abi.encode(bytes32 secret, bytes32[] path); malformed ABI offsets may revert
-    /// without data. Security rests on secrecy until use: each transaction reveals its secret,
-    /// which must then be treated as burned. Never reuse secrets or roots across escrows.
-    /// Proofs are not bound to transaction data; a mempool leak can only trigger the same action,
-    /// with release paying the current contractor and refund paying the employer, not a caller-
-    /// selected destination. Lost secrets block employer releases/refunds, not contractor claims;
-    /// mutualCancel remains the cooperative recovery path. Gating mutualCancel, claimSettlement,
-    /// updateContractor, approveMilestone, and submitMilestoneWork is an explicit non-goal.
+    /// A nonempty public key enables an SLH-DSA-SHA2-128s (FIPS 205) hash-based post-quantum
+    /// signature second factor verified by Arc's native precompile. The employer is responsible
+    /// for PQ secret key custody; the public key cannot be changed afterwards. The same key
+    /// may protect many escrows, with chain, vault, escrow and action bound by pqSigningMessage.
+    /// An empty-key availability probe rejects an absent precompile (success with no returndata);
+    /// the live precompile reverts for that malformed key. No signature is needed at creation.
+    /// Protection covers only employer release/refund, costing roughly 380k gas per protected
+    /// action. Other lifecycle functions remain wallet-key (ECDSA) only by design. A stolen
+    /// wallet key can approve milestones for contractor payment but cannot initiate protected
+    /// release/refund without a PQ signature. Lost PQ keys or a hardfork disabling the precompile
+    /// block employer release/refund, not contractor claims; mutualCancel is cooperative recovery.
     /// @param contractor Initial payout wallet; only the current contractor may rotate it.
     /// @param amounts Positive milestone amounts in six-decimal USDC base units.
     /// @param descriptions Descriptions corresponding to each milestone amount.
-    /// @param pqCommitment Immutable Merkle root of one-time-secret leaves; zero disables protection.
+    /// @param pqPublicKey Immutable 32-byte SLH-DSA-SHA2-128s public key; empty disables protection.
     /// @return escrowId Newly created identifier, starting at 1.
     function createEscrow(
         address contractor,
         uint256[] calldata amounts,
         string[] calldata descriptions,
-        bytes32 pqCommitment
+        bytes calldata pqPublicKey
     ) external nonReentrant returns (uint256 escrowId) {
         if (contractor == address(0) || contractor == msg.sender) revert InvalidContractor();
         uint256 count = amounts.length;
         if (count != descriptions.length) revert ArrayLengthMismatch();
         if (count == 0 || count > MAX_MILESTONES) revert InvalidMilestoneCount();
+        if (pqPublicKey.length != 0) {
+            if (pqPublicKey.length != PQ_PUBLIC_KEY_LENGTH) revert InvalidPQPublicKey();
+            (bool ok, bytes memory ret) = ARC_PQ_PRECOMPILE.staticcall{gas: 100_000}(
+                abi.encodeWithSelector(
+                    IArcPQ.verifySlhDsaSha2128s.selector, bytes(""), bytes(""), bytes("")
+                )
+            );
+            if (ok && ret.length == 0) revert PQPrecompileUnavailable();
+        }
 
         escrowId = ++escrowCount;
         uint256 total;
@@ -247,10 +264,9 @@ contract ArcStreamVault is ReentrancyGuard {
         agreement.contractor = contractor;
         agreement.totalDeposited = total;
         agreement.milestoneCount = count;
-        if (pqCommitment != bytes32(0)) {
-            if (pqCommitmentUsed[msg.sender][pqCommitment]) revert CommitmentAlreadyUsed();
-            pqCommitmentUsed[msg.sender][pqCommitment] = true;
-            agreement.pqCommitment = pqCommitment;
+        if (pqPublicKey.length != 0) {
+            agreement.pqPublicKey = pqPublicKey;
+            agreement.pqCommitment = keccak256(pqPublicKey);
             agreement.isPQProtected = true;
         }
         _indexUserEscrow(escrowId, msg.sender);
@@ -345,22 +361,17 @@ contract ArcStreamVault is ReentrancyGuard {
     /// @notice Pay an approved milestone directly to its designated contractor.
     /// @dev Either party may call, including after refund termination, but never after mutual
     /// settlement. All accounting is updated before transfer and rolled back if USDC rejects it.
-    /// Only a protected escrow's employer must supply the hash-based Merkle one-time-secret
-    /// second factor for action = milestoneIndex; contractor claims never require a proof.
-    /// The employer chose the immutable root at creation. Security rests on secrecy until use:
-    /// the secret is revealed in this transaction and must afterwards be treated as burned.
-    /// Proofs are not bound to transaction data; a mempool leak can only trigger this same action,
-    /// whose destination is the current contractor, never a caller-selected payout address.
-    /// Losing secrets blocks employer releases/refunds, not contractor claims; mutualCancel
-    /// remains the cooperative recovery path. Protecting mutualCancel, claimSettlement,
-    /// updateContractor, approveMilestone, or submitMilestoneWork is an explicit non-goal.
+    /// Only a protected escrow's employer supplies an SLH-DSA-SHA2-128s (FIPS 205) signature
+    /// over the exact 32-byte pqSigningMessage(escrowId, milestoneIndex) digest, verified by
+    /// Arc's native precompile before effects. Contractor claims never require a proof.
+    /// Signatures are not bound to transaction senders; a mempool copy can only trigger this
+    /// same single action, paying the current contractor, never a caller-selected destination.
+    /// Lost PQ keys or a disabled precompile block employer release/refund, not contractor
+    /// claims; mutualCancel remains cooperative recovery. Other lifecycle functions remain
+    /// wallet-key (ECDSA) only by design. Protected release costs roughly 380k gas.
     /// @param escrowId Existing escrow identifier.
-    /// @param milestoneIndex Zero-based milestone index and Merkle action index.
-    /// @param pqProof abi.encode(bytes32 secret, bytes32[] path), with at most MAX_PQ_PROOF_DEPTH
-    /// sorted-pair siblings; ignored for contractors and unprotected escrows. Malformed ABI
-    /// offsets may revert without data. Leaf = keccak256(bytes.concat(keccak256(abi.encode(
-    /// block.chainid, address(this), agreement.employer, action, secret)))), with uint256 chainid
-    /// and action, address vault and employer, and bytes32 secret.
+    /// @param milestoneIndex Zero-based milestone index and PQ signing action.
+    /// @param pqProof Raw 7856-byte signature; ignored for contractors and unprotected escrows.
     function releaseMilestone(uint256 escrowId, uint256 milestoneIndex, bytes calldata pqProof)
         external
         nonReentrant
@@ -395,21 +406,16 @@ contract ArcStreamVault is ReentrancyGuard {
     /// including submitted work, and is not blocked by submission. Approved funds remain claimable.
     /// Runs in constant time; reverts without termination if nothing is refundable. Successful
     /// termination prevents all further submissions.
-    /// Only a protected escrow's employer needs the hash-based Merkle one-time-secret second
-    /// factor for action = agreement.milestoneCount; contractor voluntary waivers never do.
-    /// The employer chose the immutable root at creation. Security rests on secrecy until use:
-    /// the secret is revealed in this transaction and must afterwards be treated as burned.
-    /// Proofs are not bound to transaction data; a mempool leak can only trigger this same action,
-    /// whose destination is the employer, never a caller-selected payout address. Losing secrets
-    /// blocks employer releases/refunds, not contractor claims; mutualCancel is the cooperative
-    /// recovery path. Protecting mutualCancel, claimSettlement, updateContractor,
-    /// approveMilestone, or submitMilestoneWork is an explicit non-goal.
+    /// Only a protected escrow's employer supplies an SLH-DSA-SHA2-128s (FIPS 205) signature
+    /// over the exact 32-byte pqSigningMessage(escrowId, agreement.milestoneCount) digest,
+    /// verified by Arc's native precompile before effects; contractor voluntary waivers do not.
+    /// Signatures are not bound to transaction senders; a mempool copy can only trigger this
+    /// same single action, paying the employer, never a caller-selected destination. Lost PQ
+    /// keys or a disabled precompile block employer release/refund, not contractor claims;
+    /// mutualCancel remains cooperative recovery. Other lifecycle functions remain wallet-key
+    /// (ECDSA) only by design. Protected refund costs roughly 380k gas.
     /// @param escrowId Existing escrow identifier.
-    /// @param pqProof abi.encode(bytes32 secret, bytes32[] path), with at most MAX_PQ_PROOF_DEPTH
-    /// sorted-pair siblings; ignored for contractors and unprotected escrows. Malformed ABI
-    /// offsets may revert without data. Leaf = keccak256(bytes.concat(keccak256(abi.encode(
-    /// block.chainid, address(this), agreement.employer, action, secret)))), with uint256 chainid
-    /// and action, address vault and employer, and bytes32 secret.
+    /// @param pqProof Raw 7856-byte signature; ignored for contractors and unprotected escrows.
     function refundRemaining(uint256 escrowId, bytes calldata pqProof) external nonReentrant {
         EscrowAgreement storage agreement = _getEscrow(escrowId);
         address employer = agreement.employer;
@@ -630,15 +636,23 @@ contract ArcStreamVault is ReentrancyGuard {
         }
     }
 
-    /// @dev Verifies leaf = keccak256(bytes.concat(keccak256(abi.encode(block.chainid,
-    /// address(this), agreement.employer, action, secret)))) against the immutable sorted-pair root.
-    /// Chainid and action are uint256, vault and employer are address, and secret is bytes32.
-    /// Clients must build leaves with the chainid, vault address, and escrow employer address;
-    /// the employer is read from storage, not supplied by the proof or inferred from the caller.
-    /// Creation restricts each nonzero root to one escrow per employer in this vault.
-    /// Proofs shorter than 96 bytes, paths over MAX_PQ_PROOF_DEPTH, and failed Merkle checks
-    /// revert InvalidQuantumProof. Malformed ABI offsets may instead revert without data.
-    /// Existing release/termination state makes each action one-time; no secret is stored.
+    /// @notice Return the exact 32-byte message digest signed for a protected employer action.
+    /// @dev Sign these digest bytes directly as the SLH-DSA-SHA2-128s message, without an
+    /// Ethereum signed-message prefix or further hashing. Verification passes abi.encodePacked
+    /// of this digest to Arc's native precompile. This helper does not validate escrow existence
+    /// or action range and does not bind a transaction sender.
+    /// @param escrowId Escrow identifier included in the signing domain.
+    /// @param action Milestone index for release, or the escrow's milestoneCount for refund.
+    /// @return Domain-bound keccak256 digest of PQ_DOMAIN, chainid, vault, escrow and action.
+    function pqSigningMessage(uint256 escrowId, uint256 action) public view returns (bytes32) {
+        return keccak256(abi.encode(PQ_DOMAIN, block.chainid, address(this), escrowId, action));
+    }
+
+    /// @dev Verify a raw SLH-DSA-SHA2-128s (FIPS 205) signature using the immutable public key
+    /// and exact 32-byte domain-bound digest via Arc's normal ABI selector call (vk, message, sig).
+    /// Wrong lengths, failed calls, malformed return data and any result other than word 1
+    /// revert InvalidQuantumProof. Existing release/termination state makes each action one-time;
+    /// the stateless public key is reusable across escrows. No PQ secret is stored or revealed.
     /// Emits before effects and token transfers; transaction failure rolls back the event.
     function _verifyQuantumProof(
         uint256 escrowId,
@@ -646,13 +660,17 @@ contract ArcStreamVault is ReentrancyGuard {
         uint256 action,
         bytes calldata pqProof
     ) private {
-        if (pqProof.length < 96) revert InvalidQuantumProof();
-        (bytes32 secret, bytes32[] memory path) = abi.decode(pqProof, (bytes32, bytes32[]));
-        if (path.length > MAX_PQ_PROOF_DEPTH) revert InvalidQuantumProof();
-        bytes32 leaf = keccak256(
-            bytes.concat(keccak256(abi.encode(block.chainid, address(this), agreement.employer, action, secret)))
+        if (pqProof.length != PQ_SIGNATURE_LENGTH) revert InvalidQuantumProof();
+        (bool ok, bytes memory ret) = ARC_PQ_PRECOMPILE.staticcall(
+            abi.encodeWithSelector(
+                IArcPQ.verifySlhDsaSha2128s.selector,
+                agreement.pqPublicKey,
+                abi.encodePacked(pqSigningMessage(escrowId, action)),
+                pqProof
+            )
         );
-        if (!MerkleProof.verify(path, agreement.pqCommitment, leaf)) revert InvalidQuantumProof();
+        if (!ok || ret.length != 32) revert InvalidQuantumProof();
+        if (abi.decode(ret, (uint256)) != 1) revert InvalidQuantumProof();
 
         emit QuantumProofVerified(escrowId, action, agreement.pqCommitment);
     }

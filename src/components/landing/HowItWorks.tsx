@@ -18,8 +18,8 @@ const STEPS = [
   {
     icon: Fingerprint,
     title: 'Biometric Touch ID Release',
-    body: 'Employers review the work, approve it, and confirm the release with Touch ID or Face ID. The contract checks a Merkle proof of a one-time secret and pays the contractor directly.',
-    points: ['Each one-time secret is used once', 'Contractors can also claim approved milestones themselves', 'Payout goes straight to the contractor wallet'],
+    body: 'Employers review the work, approve it, and confirm the release with Touch ID or Face ID, which unlocks a post-quantum signing key. the Arc native precompile verifies the SLH-DSA signature, then the contract pays the contractor directly.',
+    points: ['The signature covers this escrow and milestone only', 'Contractors can also claim approved milestones themselves', 'Payout goes straight to the contractor wallet'],
   },
 ]
 

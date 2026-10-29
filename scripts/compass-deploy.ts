@@ -11,6 +11,7 @@ import {
   type Blockchain as ScpBlockchain,
   type CircleSmartContractPlatformClient,
 } from '@circle-fin/smart-contract-platform';
+// @ts-ignore
 import { getChain } from '@circlefin/compass-chains';
 import { type Abi, type Hex, createPublicClient, createWalletClient, encodeFunctionData, http, keccak256 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';

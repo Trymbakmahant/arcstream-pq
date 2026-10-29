@@ -19,10 +19,12 @@ export interface EscrowView {
   contractor: Address
   totalDeposited: bigint
   totalReleased: bigint
+  refunded: bigint
   milestoneCount: number
   isTerminated: boolean
   isSettled: boolean
   pqCommitment: Hex
+  pqPublicKey: Hex
   isPQProtected: boolean
   milestones: MilestoneView[]
 }
@@ -58,7 +60,7 @@ export function useEscrows() {
 
       const escrows = await Promise.all(
         ids.map(async (id): Promise<EscrowView> => {
-          const [agreement, milestones, isSettled] = await Promise.all([
+          const [agreement, milestones, isSettled, refunded] = await Promise.all([
             client.readContract({
               address: VAULT_ADDRESS!,
               abi: arcStreamVaultAbi,
@@ -77,6 +79,12 @@ export function useEscrows() {
               functionName: 'isSettled',
               args: [id],
             }),
+            client.readContract({
+              address: VAULT_ADDRESS!,
+              abi: arcStreamVaultAbi,
+              functionName: 'refundedAmounts',
+              args: [id],
+            }),
           ])
           return {
             id,
@@ -84,10 +92,12 @@ export function useEscrows() {
             contractor: agreement.contractor,
             totalDeposited: agreement.totalDeposited,
             totalReleased: agreement.totalReleased,
+            refunded,
             milestoneCount: Number(agreement.milestoneCount),
             isTerminated: agreement.isTerminated,
             isSettled,
             pqCommitment: agreement.pqCommitment,
+            pqPublicKey: agreement.pqPublicKey,
             isPQProtected: agreement.isPQProtected,
             milestones: milestones.map((m) => ({
               amount: m.amount,

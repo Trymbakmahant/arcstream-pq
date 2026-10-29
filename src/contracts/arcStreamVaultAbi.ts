@@ -13,6 +13,19 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "function",
+    "name": "ARC_PQ_PRECOMPILE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "MAX_MILESTONES",
     "inputs": [],
     "outputs": [
@@ -39,7 +52,7 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "function",
-    "name": "MAX_PQ_PROOF_DEPTH",
+    "name": "MAX_WORK_PROOF_LENGTH",
     "inputs": [],
     "outputs": [
       {
@@ -52,7 +65,33 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "function",
-    "name": "MAX_WORK_PROOF_LENGTH",
+    "name": "PQ_DOMAIN",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "PQ_PUBLIC_KEY_LENGTH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "PQ_SIGNATURE_LENGTH",
     "inputs": [],
     "outputs": [
       {
@@ -165,9 +204,9 @@ export const arcStreamVaultAbi = [
         "internalType": "string[]"
       },
       {
-        "name": "pqCommitment",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "name": "pqPublicKey",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ],
     "outputs": [
@@ -266,6 +305,11 @@ export const arcStreamVaultAbi = [
             "name": "isPQProtected",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "pqPublicKey",
+            "type": "bytes",
+            "internalType": "bytes"
           }
         ]
       }
@@ -524,24 +568,24 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "function",
-    "name": "pqCommitmentUsed",
+    "name": "pqSigningMessage",
     "inputs": [
       {
-        "name": "employer",
-        "type": "address",
-        "internalType": "address"
+        "name": "escrowId",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        "name": "commitment",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "name": "action",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
       {
-        "name": "used",
-        "type": "bool",
-        "internalType": "bool"
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "view"
@@ -979,11 +1023,6 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "error",
-    "name": "CommitmentAlreadyUsed",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "EmptyWorkProof",
     "inputs": []
   },
@@ -1015,6 +1054,11 @@ export const arcStreamVaultAbi = [
   {
     "type": "error",
     "name": "InvalidMilestoneCount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidPQPublicKey",
     "inputs": []
   },
   {
@@ -1060,6 +1104,11 @@ export const arcStreamVaultAbi = [
   {
     "type": "error",
     "name": "NothingToRefund",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PQPrecompileUnavailable",
     "inputs": []
   },
   {

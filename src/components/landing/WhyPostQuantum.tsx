@@ -4,12 +4,12 @@ const ROWS = [
   {
     topic: 'Who must authorize a release',
     classic: 'One wallet signature (ECDSA secp256k1).',
-    pq: 'Wallet signature plus a hash-based one-time secret unlocked by Touch ID / Face ID.',
+    pq: 'Wallet signature plus an SLH-DSA post-quantum signature, unlocked by Touch ID / Face ID.',
   },
   {
     topic: 'Quantum exposure',
     classic: 'A large quantum computer running Shor\u2019s algorithm could derive the private key from its public key.',
-    pq: 'The release and refund secrets sit behind keccak256 Merkle commitments, which Shor\u2019s algorithm does not break.',
+    pq: 'SLH-DSA-SHA2-128s (NIST FIPS 205) is hash-based and is not broken by Shor\u2019s algorithm. Arc verifies it natively.',
   },
   {
     topic: 'Employer refund after delivery',
@@ -17,9 +17,9 @@ const ROWS = [
     pq: 'Blocked while submitted work awaits approval. Disputes go through a split both sides must accept.',
   },
   {
-    topic: 'Secret reuse',
-    classic: 'The same key signs everything, forever.',
-    pq: 'Every secret is revealed once and never reused, one per milestone plus one for refund.',
+    topic: 'What each signature covers',
+    classic: 'A wallet signature is only as safe as its key.',
+    pq: 'Each signature is bound to the chain, the vault, one escrow and one action, so it cannot be replayed elsewhere.',
   },
 ]
 

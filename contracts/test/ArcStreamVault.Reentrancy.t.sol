@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {ArcStreamVault} from "../ArcStreamVault.sol";
+import {MockArcPQ} from "../test-helpers/MockArcPQ.sol";
 import {ReentrantToken} from "../test-helpers/ReentrantToken.sol";
 import {ReentrancyAttacker} from "../test-helpers/ReentrancyAttacker.sol";
 
@@ -19,9 +20,19 @@ contract ArcStreamVaultReentrancyTest is Test {
     uint256 internal constant M1 = 200e6;
     uint256 internal constant M2 = 300e6;
     uint256 internal constant TOTAL = 600e6;
+    address internal constant PQ_PRECOMPILE = 0x1800000000000000000000000000000000000004;
+    bytes internal pqKey = abi.encodePacked(keccak256("pq-public-key-A"));
+
+    /// Mock-valid SLH-DSA signature by `pqKey` over the vault's domain-bound digest.
+    function _pqSig(uint256 escrowId, uint256 action) internal view returns (bytes memory) {
+        bytes32 digest = vault.pqSigningMessage(escrowId, action);
+        return abi.encodePacked(keccak256(abi.encodePacked(pqKey, abi.encodePacked(digest))), new bytes(7856 - 32));
+    }
+
     bytes4 internal GUARD = ReentrancyGuard.ReentrancyGuardReentrantCall.selector;
 
     function setUp() public {
+        vm.etch(PQ_PRECOMPILE, address(new MockArcPQ()).code);
         token = new ReentrantToken();
         vault = new ArcStreamVault(address(token));
         attacker = new ReentrancyAttacker();
@@ -62,7 +73,7 @@ contract ArcStreamVaultReentrancyTest is Test {
     // ------------------------------------------- malicious contractor (hook on release)
     function test_Reentrancy_MaliciousContractor_CannotDoubleReleaseOrRefund() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(address(attacker), _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(address(attacker), _three(), _descs(), "");
         attacker.exec(address(vault), abi.encodeCall(ArcStreamVault.submitMilestoneWork, (id, 0, "p")));
         attacker.exec(address(vault), abi.encodeCall(ArcStreamVault.submitMilestoneWork, (id, 1, "p")));
         vm.startPrank(employer);
@@ -79,7 +90,7 @@ contract ArcStreamVaultReentrancyTest is Test {
         attacker.addAttempt(address(vault), abi.encodeCall(ArcStreamVault.refundRemaining, (id, "")));
         attacker.addAttempt(address(vault), abi.encodeCall(ArcStreamVault.approveMilestone, (id, 2)));
         attacker.addAttempt(
-            address(vault), abi.encodeCall(ArcStreamVault.createEscrow, (address(0xBEEF), _three(), _descs(), bytes32(0)))
+            address(vault), abi.encodeCall(ArcStreamVault.createEscrow, (address(0xBEEF), _three(), _descs(), ""))
         );
         token.enableHooks(true);
 
@@ -101,7 +112,7 @@ contract ArcStreamVaultReentrancyTest is Test {
         token.mint(address(attacker), 1_000e6);
         attacker.exec(address(token), abi.encodeCall(token.approve, (address(vault), type(uint256).max)));
         bytes memory ret = attacker.exec(
-            address(vault), abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), bytes32(0)))
+            address(vault), abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), ""))
         );
         uint256 id = abi.decode(ret, (uint256));
         _submitAs(contractor, id, 0);
@@ -136,10 +147,10 @@ contract ArcStreamVaultReentrancyTest is Test {
         token.arm(
             address(vault),
             address(vault),
-            abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), bytes32(0)))
+            abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), ""))
         );
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
 
         assertEq(token.fires(), 1);
         assertFalse(token.lastOk());
@@ -152,7 +163,7 @@ contract ArcStreamVaultReentrancyTest is Test {
     // ------------------------------------------- hostile token reenters release / refund
     function test_Reentrancy_TokenReentersReleaseSameMilestone_Blocked() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
         _submitAs(contractor, id, 0);
         vm.prank(employer);
         vault.approveMilestone(id, 0);
@@ -170,7 +181,7 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function test_Reentrancy_TokenReentersRefundDuringRelease_Blocked() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
         _submitAs(contractor, id, 0);
         vm.prank(employer);
         vault.approveMilestone(id, 0);
@@ -187,7 +198,7 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function test_Reentrancy_TokenReentersReleaseDuringRefund_Blocked() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
         _submitAs(contractor, id, 0);
         vm.prank(employer);
         vault.approveMilestone(id, 0);
@@ -210,7 +221,7 @@ contract ArcStreamVaultReentrancyTest is Test {
         token.approve(address(vault), type(uint256).max);
         vm.prank(poor);
         vm.expectRevert();
-        vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        vault.createEscrow(contractor, _three(), _descs(), "");
         assertEq(vault.escrowCount(), 0);
     }
 
@@ -220,7 +231,7 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function test_Reentrancy_ClaimSettlement_MaliciousContractorCannotReclaim() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(address(attacker), _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(address(attacker), _three(), _descs(), "");
         vm.prank(employer);
         vault.mutualCancel(id, C_SHARE, E_SHARE);
         attacker.exec(address(vault), abi.encodeCall(ArcStreamVault.mutualCancel, (id, C_SHARE, E_SHARE)));
@@ -249,7 +260,7 @@ contract ArcStreamVaultReentrancyTest is Test {
         token.mint(address(attacker), 1_000e6);
         attacker.exec(address(token), abi.encodeCall(token.approve, (address(vault), type(uint256).max)));
         bytes memory ret = attacker.exec(
-            address(vault), abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), bytes32(0)))
+            address(vault), abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), ""))
         );
         uint256 id = abi.decode(ret, (uint256));
         attacker.exec(address(vault), abi.encodeCall(ArcStreamVault.mutualCancel, (id, C_SHARE, E_SHARE)));
@@ -277,7 +288,7 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function _settledEscrow() internal returns (uint256 id) {
         vm.prank(employer);
-        id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        id = vault.createEscrow(contractor, _three(), _descs(), "");
         vm.prank(employer);
         vault.mutualCancel(id, C_SHARE, E_SHARE);
         vm.prank(contractor);
@@ -310,7 +321,7 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function test_Reentrancy_TokenReentersApproveDuringRelease_Blocked() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
         _submitAs(contractor, id, 0);
         _submitAs(contractor, id, 1);
         vm.prank(employer);
@@ -328,7 +339,7 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function test_Reentrancy_TokenReentersSubmitDuringRelease_Blocked() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
         _submitAs(contractor, id, 0);
         vm.prank(employer);
         vault.approveMilestone(id, 0);
@@ -345,11 +356,78 @@ contract ArcStreamVaultReentrancyTest is Test {
 
     function test_Reentrancy_TokenReentersMutualCancelDuringRefund_Blocked() public {
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, _three(), _descs(), bytes32(0));
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), "");
         token.arm(employer, address(vault), abi.encodeCall(ArcStreamVault.mutualCancel, (id, 0, 0)));
         vm.prank(employer);
         vault.refundRemaining(id, "");
         assertFalse(token.lastOk());
         assertEq(bytes4(token.lastRet()), GUARD);
+    }
+
+    // ------------------------------------------- protected escrows with valid proofs
+    function _protectedApproved() internal returns (uint256 id) {
+        vm.prank(employer);
+        id = vault.createEscrow(contractor, _three(), _descs(), pqKey);
+        _submitAs(contractor, id, 0);
+        vm.prank(employer);
+        vault.approveMilestone(id, 0);
+    }
+
+    function test_Reentrancy_ProtectedRelease_TokenReplaysValidProof_Blocked() public {
+        uint256 id = _protectedApproved();
+        bytes memory sig = _pqSig(id, 0);
+        token.arm(contractor, address(vault), abi.encodeCall(ArcStreamVault.releaseMilestone, (id, 0, sig)));
+        vm.prank(employer);
+        vault.releaseMilestone(id, 0, sig);
+
+        assertEq(token.fires(), 1);
+        assertFalse(token.lastOk());
+        assertEq(bytes4(token.lastRet()), GUARD);
+        assertEq(token.balanceOf(contractor), M0);
+        assertEq(token.balanceOf(address(vault)), TOTAL - M0);
+    }
+
+    function test_Reentrancy_ProtectedRelease_TokenReentersRefundWithValidProof_Blocked() public {
+        uint256 id = _protectedApproved();
+        token.arm(
+            contractor, address(vault), abi.encodeCall(ArcStreamVault.refundRemaining, (id, _pqSig(id, 3)))
+        );
+        bytes memory relSig = _pqSig(id, 0);
+        vm.prank(employer);
+        vault.releaseMilestone(id, 0, relSig);
+
+        assertFalse(token.lastOk());
+        assertEq(bytes4(token.lastRet()), GUARD);
+        assertFalse(vault.getEscrow(id).isTerminated);
+        assertEq(vault.refundedAmounts(id), 0);
+    }
+
+    function test_Reentrancy_ProtectedRefund_TokenReentersReleaseWithValidProof_Blocked() public {
+        uint256 id = _protectedApproved();
+        token.arm(
+            employer, address(vault), abi.encodeCall(ArcStreamVault.releaseMilestone, (id, 0, _pqSig(id, 0)))
+        );
+        bytes memory refSig = _pqSig(id, 3);
+        vm.prank(employer);
+        vault.refundRemaining(id, refSig);
+
+        assertFalse(token.lastOk());
+        assertEq(bytes4(token.lastRet()), GUARD);
+        assertEq(token.balanceOf(contractor), 0);
+        assertEq(token.balanceOf(address(vault)), M0);
+    }
+
+    function test_Reentrancy_ProtectedCreate_TokenReentersCreateProtected_Blocked() public {
+        token.arm(
+            address(vault),
+            address(vault),
+            abi.encodeCall(ArcStreamVault.createEscrow, (contractor, _three(), _descs(), pqKey))
+        );
+        vm.prank(employer);
+        uint256 id = vault.createEscrow(contractor, _three(), _descs(), pqKey);
+        assertFalse(token.lastOk());
+        assertEq(bytes4(token.lastRet()), GUARD);
+        assertEq(id, 1);
+        assertEq(vault.escrowCount(), 1);
     }
 }

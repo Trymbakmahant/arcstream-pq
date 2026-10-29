@@ -15,7 +15,7 @@ contract ArcStreamVaultViewsTest is ArcStreamVaultTestBase {
         if (usdc.balanceOf(emp) == 0) usdc.mint(emp, 1_000e6);
         vm.startPrank(emp);
         usdc.approve(address(vault), type(uint256).max);
-        id = vault.createEscrow(con, a, d, bytes32(0));
+        id = vault.createEscrow(con, a, d, "");
         vm.stopPrank();
     }
 
@@ -52,7 +52,7 @@ contract ArcStreamVaultViewsTest is ArcStreamVaultTestBase {
         d[1] = "y";
         d[2] = "z";
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, bytes32(0));
+        uint256 id = vault.createEscrow(contractor, a, d, "");
 
         ArcStreamVault.Milestone[] memory ms = vault.getMilestones(id);
         assertEq(ms.length, 3);
@@ -102,7 +102,7 @@ contract ArcStreamVaultViewsTest is ArcStreamVaultTestBase {
         }
         string[] memory d = _descs(50);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, bytes32(0));
+        uint256 id = vault.createEscrow(contractor, a, d, "");
         assertEq(vault.getMilestones(id).length, 50);
     }
 

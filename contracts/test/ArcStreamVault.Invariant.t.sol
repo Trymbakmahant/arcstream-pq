@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ArcStreamVault} from "../ArcStreamVault.sol";
 import {MockERC20} from "../test-helpers/MockERC20.sol";
-import {PQMerkle} from "../test-helpers/PQMerkle.sol";
+import {MockArcPQ} from "../test-helpers/MockArcPQ.sol";
 
 /// Bounded-action handler: random sequences of create / submit / approve / release / refund /
 /// rotate / donate / mutualCancel (both parties) / claimSettlement / cancelProposal across
@@ -33,7 +33,9 @@ contract VaultHandler is Test {
     /// Employer actions on protected escrows with a missing/wrong proof that nevertheless succeeded.
     uint256 public badProofSuccesses;
 
-    mapping(uint256 id => bytes32 seed) public seedOf;
+    uint256 internal constant SIG_LEN = 7856;
+
+    mapping(uint256 id => bytes key) internal keyOf;
 
     constructor(ArcStreamVault v, MockERC20 t) {
         vault = v;
@@ -57,12 +59,15 @@ contract VaultHandler is Test {
         _create(eSeed, cSeed, nSeed, amtSeed, false);
     }
 
-    /// PQ-protected escrow with a fresh, unique tree per creation.
+    /// PQ-protected escrow; the handler reuses a small pool of 32-byte keys across escrows.
     function createProtected(uint256 eSeed, uint256 cSeed, uint256 nSeed, uint256 amtSeed) external {
         _create(eSeed, cSeed, nSeed, amtSeed, true);
     }
 
-    function _create(uint256 eSeed, uint256 cSeed, uint256 nSeed, uint256 amtSeed, bool protectedEscrow) internal {
+    function _create(uint256 eSeed, uint256 cSeed, uint256 nSeed, uint256 amtSeed, bool protectedEscrow)
+        internal
+        returns (uint256 id)
+    {
         address e = employers[eSeed % 3];
         address c = wallets[cSeed % 6];
         uint256 n = bound(nSeed, 1, 8);
@@ -75,41 +80,94 @@ contract VaultHandler is Test {
             total += a[i];
         }
         usdc.mint(e, total);
-        bytes32 root;
-        bytes32 seed;
-        if (protectedEscrow) {
-            seed = keccak256(abi.encode("handler-seed", creates));
-            root = PQMerkle.root(address(vault), e, seed, n);
-        }
+        bytes memory key;
+        if (protectedEscrow) key = _key(creates % 3);
         vm.startPrank(e);
         usdc.approve(address(vault), total);
-        uint256 id = vault.createEscrow(c, a, d, root);
+        id = vault.createEscrow(c, a, d, key);
         vm.stopPrank();
         creates++;
         if (protectedEscrow) {
-            seedOf[id] = seed;
+            keyOf[id] = key;
             pqCreates++;
         }
     }
 
+    /// Create a protected escrow and drive it with valid mock proofs: release and/or refund.
+    function protectedFlow(uint256 eSeed, uint256 cSeed, uint256 nSeed, uint256 amtSeed, uint8 mode) external {
+        uint256 id = _create(eSeed, cSeed, nSeed, amtSeed, true);
+        ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
+        uint256 m = mode % 3;
+        if (m == 2 && e.milestoneCount == 1) m = 0; // nothing left to refund once approved
+        if (m != 1) {
+            vm.prank(e.contractor);
+            vault.submitMilestoneWork(id, 0, "proof");
+            vm.prank(e.employer);
+            vault.approveMilestone(id, 0);
+            submits++;
+            approves++;
+        }
+        if (m == 0) {
+            vm.prank(e.employer);
+            vault.releaseMilestone(id, 0, _proof(id, e, 0));
+            releases++;
+            pqReleases++;
+        } else {
+            vm.prank(e.employer);
+            vault.refundRemaining(id, _proof(id, e, e.milestoneCount));
+            refunds++;
+            pqRefunds++;
+            if (m == 2) {
+                vm.prank(e.employer);
+                vault.releaseMilestone(id, 0, _proof(id, e, 0));
+                releases++;
+                pqReleases++;
+            }
+        }
+    }
+
+    function _key(uint256 i) internal pure returns (bytes memory) {
+        return abi.encodePacked(keccak256(abi.encode("handler-key", i)));
+    }
+
+    function _sigWith(bytes memory key, uint256 id, uint256 action) internal view returns (bytes memory) {
+        bytes32 digest = keccak256(abi.encode(keccak256("ArcStreamVault.PQ.v1"), block.chainid, address(vault), id, action));
+        return abi.encodePacked(keccak256(abi.encodePacked(key, abi.encodePacked(digest))), new bytes(SIG_LEN - 32));
+    }
+
+    /// Valid mock signature for the escrow's own key, or empty for unprotected escrows.
     function _proof(uint256 id, ArcStreamVault.EscrowAgreement memory e, uint256 action)
         internal
         view
         returns (bytes memory)
     {
         if (!e.isPQProtected) return "";
-        return PQMerkle.proof(address(vault), e.employer, seedOf[id], e.milestoneCount, action);
+        return _sigWith(keyOf[id], id, action);
     }
 
-    /// Employer actions on a protected escrow with no proof / a wrong-action proof must never succeed.
-    function badProofAttempt(uint256 idSeed, uint256 mSeed, bool refundAction, bool empty) external {
+    /// Employer actions on a protected escrow with an invalid proof must never succeed.
+    function badProofAttempt(uint256 idSeed, uint256 mSeed, bool refundAction, uint8 kind) external {
         uint256 id = _pickId(idSeed);
         if (id == 0) return;
         ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
         if (!e.isPQProtected) return;
         uint256 m = bound(mSeed, 0, (e.milestoneCount < 3 ? e.milestoneCount : 3) - 1);
-        // wrong action: release proof for milestone m used on refund, refund-leaf proof used on release
-        bytes memory bad = empty ? bytes("") : _proof(id, e, refundAction ? m : e.milestoneCount);
+        uint256 action = refundAction ? e.milestoneCount : m;
+        uint256 k = kind % 6;
+        bytes memory bad;
+        if (k == 0) {
+            bad = "";
+        } else if (k == 1) {
+            bad = _sigWith(keyOf[id], id, refundAction ? m : e.milestoneCount); // wrong action
+        } else if (k == 2) {
+            bad = _sigWith(_key(7), id, action); // wrong key
+        } else if (k == 3) {
+            bad = _sigWith(keyOf[id], id + 1, action); // wrong escrow id
+        } else if (k == 4) {
+            bad = new bytes(SIG_LEN); // well-formed but wrong
+        } else {
+            bad = new bytes(SIG_LEN - 1); // wrong length
+        }
         vm.prank(e.employer);
         if (refundAction) {
             try vault.refundRemaining(id, bad) {
@@ -272,6 +330,7 @@ contract ArcStreamVaultInvariantTest is Test {
     VaultHandler internal handler;
 
     function setUp() public {
+        vm.etch(0x1800000000000000000000000000000000000004, address(new MockArcPQ()).code);
         usdc = new MockERC20("Mock USDC", "mUSDC", 6);
         vault = new ArcStreamVault(address(usdc));
         handler = new VaultHandler(vault, usdc);
@@ -301,13 +360,18 @@ contract ArcStreamVaultInvariantTest is Test {
         assertEq(handler.badProofSuccesses(), 0);
     }
 
-    /// Protected escrows keep their commitment and flag; each commitment is registered as used.
-    function invariant_PQCommitmentsConsistent() public view {
+    /// Protected escrows keep a 32-byte key whose keccak256 is the commitment; others hold none.
+    function invariant_PQKeyAndCommitmentConsistent() public view {
         uint256 count = vault.escrowCount();
         for (uint256 id = 1; id <= count; ++id) {
             ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
-            assertEq(e.isPQProtected, e.pqCommitment != bytes32(0));
-            if (e.isPQProtected) assertTrue(vault.pqCommitmentUsed(e.employer, e.pqCommitment));
+            if (e.isPQProtected) {
+                assertEq(e.pqPublicKey.length, 32);
+                assertEq(e.pqCommitment, keccak256(e.pqPublicKey));
+            } else {
+                assertEq(e.pqPublicKey.length, 0);
+                assertEq(e.pqCommitment, bytes32(0));
+            }
         }
     }
 

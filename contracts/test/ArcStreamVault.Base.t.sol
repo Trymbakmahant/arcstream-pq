@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ArcStreamVault} from "../ArcStreamVault.sol";
 import {MockERC20} from "../test-helpers/MockERC20.sol";
-import {PQMerkle} from "../test-helpers/PQMerkle.sol";
+import {MockArcPQ} from "../test-helpers/MockArcPQ.sol";
 
 abstract contract ArcStreamVaultTestBase is Test {
     ArcStreamVault internal vault;
@@ -22,7 +22,14 @@ abstract contract ArcStreamVaultTestBase is Test {
     uint256 internal constant EMPLOYER_FUNDS = 1_000_000e6;
     string internal constant PROOF = "ipfs://proof";
 
+    address internal constant PQ_PRECOMPILE = 0x1800000000000000000000000000000000000004;
+    bytes32 internal constant PQ_DOMAIN_ID = keccak256("ArcStreamVault.PQ.v1");
+    uint256 internal constant SIG_LEN = 7856;
+    bytes internal pqKey = abi.encodePacked(keccak256("pq-public-key-A"));
+    bytes internal pqKeyB = abi.encodePacked(keccak256("pq-public-key-B"));
+
     function setUp() public virtual {
+        vm.etch(PQ_PRECOMPILE, address(new MockArcPQ()).code);
         usdc = new MockERC20("Mock USDC", "mUSDC", 6);
         vault = new ArcStreamVault(address(usdc));
         usdc.mint(employer, EMPLOYER_FUNDS);
@@ -48,34 +55,45 @@ abstract contract ArcStreamVaultTestBase is Test {
         uint256[] memory a = _three();
         string[] memory d = _descs(3);
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, bytes32(0));
+        id = vault.createEscrow(contractor, a, d, "");
     }
 
     // ------------------------------------------------------------ PQ helpers
 
-    /// Employer creates an escrow of `n` milestones (amount 10e6 each) with `root` as commitment.
-    function _createN(uint256 n, bytes32 root) internal returns (uint256 id) {
+    /// Employer creates an escrow of `n` milestones (amount 10e6 each) with `key` as PQ public key.
+    function _createN(uint256 n, bytes memory key) internal returns (uint256 id) {
         uint256[] memory a = new uint256[](n);
         for (uint256 i; i < n; ++i) {
             a[i] = 10e6;
         }
         string[] memory d = _descs(n);
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, root);
+        id = vault.createEscrow(contractor, a, d, key);
     }
 
-    /// Root for `who` as employer over `n` milestones from `seed`.
-    function _rootFor(address who, bytes32 seed, uint256 n) internal view returns (bytes32) {
-        return PQMerkle.root(address(vault), who, seed, n);
+    /// Employer-created protected escrow with `n` milestones under `pqKey`.
+    function _createProtected(uint256 n) internal returns (uint256 id) {
+        id = _createN(n, pqKey);
     }
 
-    function _proofFor(address who, bytes32 seed, uint256 n, uint256 action) internal view returns (bytes memory) {
-        return PQMerkle.proof(address(vault), who, seed, n, action);
+    /// Independently recomputed domain-bound digest (does not call vault.pqSigningMessage).
+    function _digest(uint256 chainId, address vaultAddr, uint256 id, uint256 action) internal pure returns (bytes32) {
+        return keccak256(abi.encode(PQ_DOMAIN_ID, chainId, vaultAddr, id, action));
     }
 
-    /// Employer-created protected escrow with `n` milestones, tree built from `seed`.
-    function _createProtected(uint256 n, bytes32 seed) internal returns (uint256 id) {
-        id = _createN(n, _rootFor(employer, seed, n));
+    /// Mock-valid 7856-byte signature of `key` over `digest` (hash + zero padding).
+    function _sigOver(bytes memory key, bytes32 digest) internal pure returns (bytes memory) {
+        return abi.encodePacked(keccak256(abi.encodePacked(key, abi.encodePacked(digest))), new bytes(SIG_LEN - 32));
+    }
+
+    /// Valid signature by `key` for (escrow, action) on the live vault and chain.
+    function _sigFor(bytes memory key, uint256 id, uint256 action) internal view returns (bytes memory) {
+        return _sigOver(key, _digest(block.chainid, address(vault), id, action));
+    }
+
+    /// Valid signature by the default key.
+    function _sig(uint256 id, uint256 action) internal view returns (bytes memory) {
+        return _sigFor(pqKey, id, action);
     }
 
     /// Employer release with explicit proof bytes.

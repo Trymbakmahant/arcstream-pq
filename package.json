@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "check": "bash scripts/check.sh",
     "contracts:build": "forge build",
-    "contracts:test": "forge test"
+    "contracts:test": "forge test",
+    "pq:check": "bun run ./scripts/verify-pq-precompile.ts"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.19.2",
@@ -22,6 +23,7 @@
     "@circle-fin/smart-contract-platform": "^10.8.1",
     "@circle-fin/user-controlled-wallets": "^10.8.1",
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
+    "@noble/post-quantum": "^0.7.1",
     "@openzeppelin/contracts": "5.6.1",
     "@tanstack/react-query": "^5.62.7",
     "@web3icons/react": "^4.0.0",

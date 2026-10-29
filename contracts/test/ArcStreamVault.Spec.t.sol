@@ -24,7 +24,7 @@ contract ArcStreamVaultSpecTest is ArcStreamVaultTestBase {
     function _createTwo() internal returns (uint256 id) {
         (uint256[] memory a, string[] memory d) = _two();
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, bytes32(0));
+        id = vault.createEscrow(contractor, a, d, "");
     }
 
     // 1
@@ -41,7 +41,7 @@ contract ArcStreamVaultSpecTest is ArcStreamVaultTestBase {
         vm.expectEmit(true, true, true, true, address(vault));
         emit ArcStreamVault.EscrowCreated(1, employer, contractor, SUM, 2);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, bytes32(0));
+        uint256 id = vault.createEscrow(contractor, a, d, "");
 
         assertEq(id, 1);
         assertEq(vault.escrowCount(), 1);

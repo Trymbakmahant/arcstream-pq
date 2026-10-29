@@ -38,7 +38,7 @@ contract ArcStreamVaultCoreTest is ArcStreamVaultTestBase {
         d[1] = "build";
         d[2] = "ship";
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, bytes32(0));
+        uint256 id = vault.createEscrow(contractor, a, d, "");
 
         ArcStreamVault.Milestone memory m = vault.getMilestone(id, 1);
         assertEq(m.amount, M1);
@@ -67,7 +67,7 @@ contract ArcStreamVaultCoreTest is ArcStreamVaultTestBase {
         vm.expectEmit(true, true, true, true, address(vault));
         emit ArcStreamVault.EscrowCreated(1, employer, contractor, TOTAL, 3);
         vm.prank(employer);
-        vault.createEscrow(contractor, a, d, bytes32(0));
+        vault.createEscrow(contractor, a, d, "");
     }
 
     function test_CreateEscrow_MaxMilestonesAllowed() public {
@@ -77,7 +77,7 @@ contract ArcStreamVaultCoreTest is ArcStreamVaultTestBase {
         }
         string[] memory d = _descs(50);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, bytes32(0));
+        uint256 id = vault.createEscrow(contractor, a, d, "");
         assertEq(vault.getEscrow(id).milestoneCount, 50);
         assertEq(vault.getEscrow(id).totalDeposited, 50e6);
     }
@@ -87,7 +87,7 @@ contract ArcStreamVaultCoreTest is ArcStreamVaultTestBase {
         a[0] = 1;
         string[] memory d = _descs(1);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, bytes32(0));
+        uint256 id = vault.createEscrow(contractor, a, d, "");
         assertEq(vault.getEscrow(id).totalDeposited, 1);
     }
 

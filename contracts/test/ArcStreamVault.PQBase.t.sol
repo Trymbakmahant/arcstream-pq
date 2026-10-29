@@ -3,14 +3,11 @@ pragma solidity ^0.8.24;
 
 import {ArcStreamVaultTestBase} from "./ArcStreamVault.Base.t.sol";
 import {ArcStreamVault} from "../ArcStreamVault.sol";
-import {PQMerkle} from "../test-helpers/PQMerkle.sol";
 
-/// Shared PQ fixtures: a second employer and small proof-mutation helpers. No tests here.
+/// Shared PQ fixtures: a second employer and expectation helpers. No tests here.
 abstract contract ArcStreamVaultPQBase is ArcStreamVaultTestBase {
     address internal employer2 = makeAddr("employer2");
 
-    bytes32 internal constant SEED = keccak256("pq-seed-A");
-    bytes32 internal constant SEED_B = keccak256("pq-seed-B");
     uint256 internal constant UNIT = 10e6; // milestone amount used by _createN
 
     function setUp() public virtual override {
@@ -20,14 +17,14 @@ abstract contract ArcStreamVaultPQBase is ArcStreamVaultTestBase {
         usdc.approve(address(vault), type(uint256).max);
     }
 
-    /// Employer2 creates a `n`-milestone escrow with an explicit root.
-    function _createN2(uint256 n, bytes32 root) internal returns (uint256 id) {
+    /// Employer2 creates a `n`-milestone escrow with an explicit key.
+    function _createN2(uint256 n, bytes memory key) internal returns (uint256 id) {
         uint256[] memory a = new uint256[](n);
         for (uint256 i; i < n; ++i) {
             a[i] = UNIT;
         }
         vm.prank(employer2);
-        id = vault.createEscrow(contractor, a, _descs(n), root);
+        id = vault.createEscrow(contractor, a, _descs(n), key);
     }
 
     /// Submit + approve milestone `i` of `id` (contractor submits, the escrow's employer approves).
@@ -38,10 +35,6 @@ abstract contract ArcStreamVaultPQBase is ArcStreamVaultTestBase {
         vault.submitMilestoneWork(id, i, PROOF);
         vm.prank(e);
         vault.approveMilestone(id, i);
-    }
-
-    function _p(uint256 n, uint256 action) internal view returns (bytes memory) {
-        return _proofFor(employer, SEED, n, action);
     }
 
     /// Employer release attempt expected to revert InvalidQuantumProof; state must not move.
@@ -64,11 +57,5 @@ abstract contract ArcStreamVaultPQBase is ArcStreamVaultTestBase {
         assertEq(usdc.balanceOf(address(vault)), vaultBal);
         assertFalse(vault.getEscrow(id).isTerminated);
         assertEq(vault.refundedAmounts(id), 0);
-    }
-
-    /// Flip the lowest bit of path element `k` inside a (secret, path) proof.
-    function _tamperPath(bytes32 secret, bytes32[] memory path, uint256 k) internal pure returns (bytes memory) {
-        path[k] = bytes32(uint256(path[k]) ^ 1);
-        return abi.encode(secret, path);
     }
 }

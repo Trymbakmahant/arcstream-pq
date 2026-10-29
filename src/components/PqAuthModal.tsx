@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
-import { Check, Fingerprint, Loader2, TriangleAlert, Wallet, X } from 'lucide-react'
+import { Check, Fingerprint, Loader2, ShieldCheck, TriangleAlert, Wallet, X } from 'lucide-react'
 import { ARC_CHAIN_ID } from '@/config'
 import { VAULT_ADDRESS } from '@/contracts/vault'
 import type { EscrowView } from '@/hooks/useEscrows'
@@ -9,10 +9,10 @@ import { usePasskey } from '@/hooks/usePasskey'
 import { useVaultActions } from '@/hooks/useVaultActions'
 import { fmtUsdc, shortAddress } from '@/lib/money'
 import { fingerprint as shortHash } from '@/lib/pq'
-import { BiometricError, hasRecordFor, signWithBiometricPQKey } from '@/lib/webauthn'
+import { BiometricError, signWithBiometricPQKey } from '@/lib/webauthn'
 
 export interface PqAuthRequest {
-  kind: 'release' | 'refund'
+  kind: 'release' | 'approve-release' | 'refund'
   escrow: EscrowView
   index?: number
 }
@@ -54,10 +54,10 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
   const { escrow, kind, index } = request
   const isEmployer = !!address && address.toLowerCase() === escrow.employer.toLowerCase()
   const walletOk = isConnected && chainId === ARC_CHAIN_ID && isEmployer
-  const onDevice = !!address && hasRecordFor(address, escrow.pqCommitment)
-  const biometricReady = passkey.registered && onDevice
-  const milestone = kind === 'release' && index !== undefined ? escrow.milestones[index] : undefined
-  const action = kind === 'release' ? (index ?? 0) : escrow.milestoneCount
+  const biometricReady = passkey.registered
+  const isMilestoneAction = kind !== 'refund'
+  const milestone = isMilestoneAction && index !== undefined ? escrow.milestones[index] : undefined
+  const action = isMilestoneAction ? (index ?? 0) : escrow.milestoneCount
 
   const authorize = async () => {
     if (!address || !VAULT_ADDRESS) return
@@ -68,11 +68,13 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
         userAddress: address,
         vault: VAULT_ADDRESS,
         chainId: ARC_CHAIN_ID,
-        commitment: escrow.pqCommitment,
+        escrowId: escrow.id,
         action,
+        publicKey: escrow.pqPublicKey,
       })
       onClose()
       if (kind === 'release') await actions.releaseMilestone(escrow.id, action, proof)
+      else if (kind === 'approve-release') await actions.approveAndRelease(escrow.id, action, proof)
       else await actions.refundRemaining(escrow.id, proof)
     } catch (e) {
       setError(e instanceof BiometricError ? e.message : 'Authorization failed. Please try again.')
@@ -93,10 +95,10 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="label-caps text-brandHighlight/70">
-            Escrow #{escrow.id.toString()} {kind === 'release' ? `/ Milestone ${action + 1}` : ''}
+            Escrow #{escrow.id.toString()} {isMilestoneAction ? `/ Milestone ${action + 1}` : ''}
           </p>
           <h2 className="display mt-1 text-xl font-bold text-brandHighlight">
-            {kind === 'release' ? 'Authorize payout release' : 'Authorize refund'}
+            {kind === 'release' ? 'Authorize payout release' : kind === 'approve-release' ? 'Authorize approval and release' : 'Authorize refund'}
           </h2>
           {milestone && (
             <p className="mt-1 text-sm tabular-nums text-brandHighlight/80">{fmtUsdc(milestone.amount)} USDC to the contractor</p>
@@ -129,15 +131,19 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
         />
         <Layer
           icon={<Fingerprint className="size-4" />}
-          title="2. Biometric layer (Touch ID / Face ID)"
-          detail={
-            biometricReady
-              ? `Escrow lock ${shortHash(escrow.pqCommitment)}`
-              : 'Unlocks your one-time secret for this action'
-          }
+          title="2. Biometric unlock (Touch ID / Face ID)"
+          detail="Releases your post-quantum signing seed on this device"
           ok={biometricReady}
           okLabel="Ready"
-          failLabel={!passkey.registered ? 'Not set up' : 'Not on this device'}
+          failLabel="Not set up"
+        />
+        <Layer
+          icon={<ShieldCheck className="size-4" />}
+          title="3. Post-quantum signature (SLH-DSA, FIPS 205)"
+          detail={`Escrow key ${shortHash(escrow.pqCommitment)}, checked by Arc's precompile`}
+          ok={biometricReady}
+          okLabel="Ready"
+          failLabel="Needs step 2"
         />
       </ol>
 
@@ -171,12 +177,13 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
         }}
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
-        Authorize with Touch ID / Face ID
+        {busy ? 'Signing, this takes a few seconds...' : 'Sign with Post-Quantum Key and Continue'}
       </button>
 
       <p className="mt-3 text-xs text-brandHighlight/70">
-        Your device asks for Touch ID or Face ID, then the one-time secret for this action is sent with the
-        transaction. Each secret works once. The wallet key alone cannot release or refund this escrow.
+        Your device asks for Touch ID or Face ID. The post-quantum key is then derived in memory and signs this
+        one action. Your wallet then sends the signature, and Arc verifies it before any funds move. The wallet
+        key alone cannot release or refund this escrow, but it can still approve milestones.
       </p>
     </motion.div>
   )
