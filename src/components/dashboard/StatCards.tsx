@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { BadgeCheck, Download, FileText, Landmark } from 'lucide-react'
 import { VAULT_ADDRESS } from '@/contracts/vault'
+import { NETWORK } from '@/lib/network'
 import type { EscrowView } from '@/hooks/useEscrows'
 import { fmtUsdc } from '@/lib/money'
 import { buildCsv, summarize, type MilestoneRow } from '@/lib/rows'
@@ -17,7 +18,7 @@ export function StatCards({ escrows, rows, address, loading }: Props) {
 
   const download = () => {
     if (!VAULT_ADDRESS) return
-    const csv = buildCsv(rows, VAULT_ADDRESS, 'Arc Testnet (5042002)')
+    const csv = buildCsv(rows, VAULT_ADDRESS, `${NETWORK.label} (${NETWORK.chainId})`)
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
     const link = document.createElement('a')
     link.href = url

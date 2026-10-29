@@ -1,21 +1,23 @@
 import { useAccount } from 'wagmi'
-import { ArrowLeft, ArrowUpRight, Fingerprint, Home, Plus, ShieldCheck, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Droplets, Fingerprint, Home, Plus, ShieldCheck, X } from 'lucide-react'
 import { ARC_CHAIN_ID } from '@/config'
 import { VAULT_ADDRESS, addressUrl } from '@/contracts/vault'
 import { usePasskey } from '@/hooks/usePasskey'
 import { shortAddress } from '@/lib/money'
+import { NETWORK } from '@/lib/network'
 import { Link } from '@/lib/router'
 
 interface Props {
   open: boolean
   onClose: () => void
   onCreate: () => void
+  onFund: () => void
 }
 
 const itemBase =
   'flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors'
 
-export function Sidebar({ open, onClose, onCreate }: Props) {
+export function Sidebar({ open, onClose, onCreate, onFund }: Props) {
   const { address, isConnected, chainId } = useAccount()
   const passkey = usePasskey()
   const onArc = chainId === ARC_CHAIN_ID
@@ -58,7 +60,7 @@ export function Sidebar({ open, onClose, onCreate }: Props) {
 
         <span className="mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-brandSecondary bg-brandSecondary/25 px-3 py-1 font-mono text-[0.6875rem] font-medium text-brandHighlight">
           <span className={`size-2 rounded-full ${!isConnected || onArc ? 'bg-brandSecondary' : 'border border-brandHighlight'}`} />
-          Arc Testnet ({ARC_CHAIN_ID})
+          {NETWORK.label} ({ARC_CHAIN_ID})
         </span>
 
         <nav className="mt-8 flex-1 space-y-6 overflow-y-auto" aria-label="Dashboard">
@@ -79,6 +81,17 @@ export function Sidebar({ open, onClose, onCreate }: Props) {
               >
                 <Plus className="size-4" />
                 Create Escrow
+              </button>
+              <button
+                type="button"
+                className={`${itemBase} text-brandHighlight hover:bg-brandSecondary/30`}
+                onClick={() => {
+                  onClose()
+                  onFund()
+                }}
+              >
+                <Droplets className="size-4" />
+                Fund with USDC
               </button>
             </div>
           </div>
@@ -148,7 +161,7 @@ export function Sidebar({ open, onClose, onCreate }: Props) {
                 {shortAddress(address)}
                 <span className="size-1.5 shrink-0 rounded-full bg-brandSecondary" />
               </p>
-              <p className="font-mono text-[0.625rem] text-brandHighlight/70">{onArc ? 'Arc Testnet' : 'Wrong network'}</p>
+              <p className="font-mono text-[0.625rem] text-brandHighlight/70">{onArc ? NETWORK.label : 'Wrong network'}</p>
             </div>
           </div>
         )}

@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { NetworkBanner } from '@/components/NetworkBanner'
+import { MainnetBanner } from '@/components/NetworkSwitcher'
 import { PqAuthModal, type PqAuthRequest } from '@/components/PqAuthModal'
 import { SubmitWorkModal } from '@/components/SubmitWorkModal'
 import { TaskDetailsDrawer, type DetailsTarget } from '@/components/TaskDetailsDrawer'
 import { TxProvider } from '@/components/TxProvider'
 import { CreateEscrowModal } from '@/components/dashboard/CreateEscrowModal'
 import { EscrowsPanel } from '@/components/dashboard/EscrowsPanel'
+import { FundModal } from '@/components/dashboard/FundModal'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { StatCards } from '@/components/dashboard/StatCards'
 import { TopBar } from '@/components/dashboard/TopBar'
@@ -22,6 +24,7 @@ function DashboardContent() {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [fundOpen, setFundOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [submitTarget, setSubmitTarget] = useState<{ escrow: EscrowView; index: number } | null>(null)
   const [details, setDetails] = useState<DetailsTarget | null>(null)
@@ -51,12 +54,24 @@ function DashboardContent() {
 
   return (
     <div className="min-h-dvh bg-brandMain">
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onCreate={() => setCreateOpen(true)} />
+      <Sidebar
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onCreate={() => setCreateOpen(true)}
+        onFund={() => setFundOpen(true)}
+      />
 
       <div className="lg:pl-64">
+        <MainnetBanner />
         <NetworkBanner />
         <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-          <TopBar ref={searchRef} query={query} onQuery={setQuery} onMenu={() => setMenuOpen(true)} />
+          <TopBar
+            ref={searchRef}
+            query={query}
+            onQuery={setQuery}
+            onMenu={() => setMenuOpen(true)}
+            onFund={() => setFundOpen(true)}
+          />
           <StatCards escrows={mine} rows={rows} address={address} loading={isLoading} />
           <EscrowsPanel
             rows={rows}
@@ -71,7 +86,8 @@ function DashboardContent() {
         </main>
       </div>
 
-      <CreateEscrowModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateEscrowModal open={createOpen} onClose={() => setCreateOpen(false)} onFund={() => setFundOpen(true)} />
+      <FundModal open={fundOpen} onClose={() => setFundOpen(false)} />
 
       <TaskDetailsDrawer
         target={details}

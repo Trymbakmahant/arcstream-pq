@@ -6,6 +6,7 @@ import { Eye, Fingerprint, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ARC_CHAIN_ID } from '@/config'
 import { VAULT_ADDRESS } from '@/contracts/vault'
+import { NETWORK } from '@/lib/network'
 import { useUsdcBalance } from '@/hooks/useUsdc'
 import { useVaultActions } from '@/hooks/useVaultActions'
 import { usePasskey } from '@/hooks/usePasskey'
@@ -28,7 +29,7 @@ interface Row {
 let rowKey = 0
 const newRow = (): Row => ({ key: rowKey++, amount: '', description: '', mode: 'write' })
 
-export function CreateEscrowCard({ onCreated }: { onCreated?: () => void }) {
+export function CreateEscrowCard({ onCreated, onFund }: { onCreated?: () => void; onFund?: () => void }) {
   const { address, isConnected, chainId } = useAccount()
   const { switchChain } = useSwitchChain()
   const { data: balance } = useUsdcBalance()
@@ -316,7 +317,7 @@ export function CreateEscrowCard({ onCreated }: { onCreated?: () => void }) {
             className="btn-primary rounded-xl px-6 py-3"
             onClick={() => switchChain({ chainId: ARC_CHAIN_ID })}
           >
-            Switch to Arc Testnet
+            Switch to {NETWORK.label}
           </button>
         ) : (
           <button
@@ -333,7 +334,17 @@ export function CreateEscrowCard({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       {isConnected && chainId === ARC_CHAIN_ID && problem && (
-        <p className="mt-3 text-sm text-brandHighlight/80">{problem}</p>
+        <p className="mt-3 text-sm text-brandHighlight/80">
+          {problem}
+          {insufficient && onFund && (
+            <>
+              {' '}
+              <button type="button" className="font-semibold underline underline-offset-4" onClick={onFund}>
+                Fund with USDC
+              </button>
+            </>
+          )}
+        </p>
       )}
       <p className="mt-3 text-xs text-brandHighlight/70">
         Two wallet confirmations: first the USDC allowance, then the escrow deposit.

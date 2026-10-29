@@ -1,8 +1,9 @@
 import { ArrowRight, Landmark } from 'lucide-react'
 import { Link } from '@/lib/router'
 import { addressUrl, VAULT_ADDRESS } from '@/contracts/vault'
+import { NETWORK } from '@/lib/network'
 
-const explorerHref = VAULT_ADDRESS ? addressUrl(VAULT_ADDRESS) : 'https://explorer.testnet.arc.io'
+const explorerHref = VAULT_ADDRESS ? addressUrl(VAULT_ADDRESS) : NETWORK.explorerUrl
 
 const LINKS = [
   { label: 'How It Works', href: '#how-it-works', external: false },

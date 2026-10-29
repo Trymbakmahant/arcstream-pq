@@ -4,7 +4,8 @@ import { useAccount } from 'wagmi'
 import { TokenUSDC } from '@web3icons/react'
 import { ChevronDown, Droplets, Fingerprint, Menu, Search, Wallet } from 'lucide-react'
 import { ARC_CHAIN_ID } from '@/config'
-import { FAUCET_URL } from '@/contracts/vault'
+import { NetworkSwitcher } from '@/components/NetworkSwitcher'
+import { NETWORK } from '@/lib/network'
 import { usePasskey } from '@/hooks/usePasskey'
 import { useUsdcBalance } from '@/hooks/useUsdc'
 import { fmtUsdc, shortAddress } from '@/lib/money'
@@ -13,9 +14,10 @@ interface Props {
   query: string
   onQuery: (value: string) => void
   onMenu: () => void
+  onFund: () => void
 }
 
-export const TopBar = forwardRef<HTMLInputElement, Props>(function TopBar({ query, onQuery, onMenu }, searchRef) {
+export const TopBar = forwardRef<HTMLInputElement, Props>(function TopBar({ query, onQuery, onMenu, onFund }, searchRef) {
   const { isConnected, chainId, address } = useAccount()
   const { data: balance } = useUsdcBalance()
   const passkey = usePasskey()
@@ -49,20 +51,16 @@ export const TopBar = forwardRef<HTMLInputElement, Props>(function TopBar({ quer
       </div>
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <span className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brandHighlight/10 bg-white px-4 font-mono text-xs font-medium text-brandHighlight">
-          <span className={`size-2 rounded-full ${!isConnected || onArc ? 'bg-brandSecondary' : 'border border-brandHighlight'}`} />
-          {isConnected && !onArc ? 'Wrong network' : `Arc Testnet (${ARC_CHAIN_ID})`}
-        </span>
+        <NetworkSwitcher wrongNetwork={isConnected && !onArc} />
 
-        <a
-          href={FAUCET_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={onFund}
           className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brandSecondary bg-brandSecondary/40 px-4 text-xs font-semibold text-brandHighlight hover:bg-brandSecondary/60"
         >
           <Droplets className="size-4" />
-          Get Free Testnet USDC
-        </a>
+          {NETWORK.isMainnet ? 'Fund with USDC' : 'Get Free Testnet USDC'}
+        </button>
 
         <button
           type="button"

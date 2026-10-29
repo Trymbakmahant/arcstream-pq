@@ -13,7 +13,9 @@
     "check": "bash scripts/check.sh",
     "contracts:build": "forge build",
     "contracts:test": "forge test",
-    "pq:check": "bun run ./scripts/verify-pq-precompile.ts"
+    "pq:check": "bun run ./scripts/verify-pq-precompile.ts",
+    "mainnet:check": "bun run ./scripts/verify-mainnet-deploy.ts",
+    "dev:api": "bun run ./server/onramp.ts"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.19.2",

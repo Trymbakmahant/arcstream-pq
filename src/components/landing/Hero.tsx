@@ -3,6 +3,7 @@ import { usePublicClient } from 'wagmi'
 import { ArrowRight, ExternalLink, Fingerprint, ShieldCheck, Coins, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { ARC_CHAIN_ID } from '@/config'
+import { NETWORK } from '@/lib/network'
 import { VAULT_ADDRESS, addressUrl, arcStreamVaultAbi } from '@/contracts/vault'
 import { Link } from '@/lib/router'
 
@@ -87,7 +88,7 @@ export function Hero() {
         </div>
 
         <p className="mt-4 text-xs tabular-nums text-brandHighlight/70">
-          Live on Arc Testnet
+          {VAULT_ADDRESS ? `Live on ${NETWORK.label}` : `${NETWORK.label}: contract not deployed yet`}
           {count !== undefined ? ` • ${count.toString()} ${count === 1n ? 'escrow' : 'escrows'} created` : ''}
         </p>
       </motion.div>

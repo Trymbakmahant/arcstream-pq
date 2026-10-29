@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Check, ExternalLink, Loader2, TriangleAlert, X } from 'lucide-react'
 import { ARC_CHAIN_ID } from '@/config'
 import { txUrl } from '@/contracts/vault'
+import { NETWORK } from '@/lib/network'
 import { isUserRejection, parseOnchainError } from '@/lib/errors'
 import { TxContext, type TxStep } from '@/components/txContext'
 
@@ -110,7 +111,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="label-caps text-brandHighlight/70">Arc Testnet</p>
+                  <p className="label-caps text-brandHighlight/70">{NETWORK.label}</p>
                   <h2 className="display mt-1 text-xl font-bold text-brandHighlight">{flow.title}</h2>
                 </div>
                 {flow.finished && (
@@ -164,7 +165,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
                   rel="noopener noreferrer"
                   className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brandHighlight px-4 text-sm font-semibold text-brandMain"
                 >
-                  View on Arc Testnet Explorer <ExternalLink className="size-4" />
+                  View on {NETWORK.label} Explorer <ExternalLink className="size-4" />
                 </a>
               )}
 

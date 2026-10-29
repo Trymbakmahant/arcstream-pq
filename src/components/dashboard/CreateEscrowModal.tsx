@@ -6,9 +6,10 @@ import { CreateEscrowCard } from '@/components/CreateEscrowCard'
 interface Props {
   open: boolean
   onClose: () => void
+  onFund: () => void
 }
 
-export function CreateEscrowModal({ open, onClose }: Props) {
+export function CreateEscrowModal({ open, onClose, onFund }: Props) {
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
@@ -48,7 +49,7 @@ export function CreateEscrowModal({ open, onClose }: Props) {
               <X className="size-5" />
             </button>
             <div className="rounded-2xl bg-brandMain">
-              <CreateEscrowCard onCreated={onClose} />
+              <CreateEscrowCard onCreated={onClose} onFund={onFund} />
             </div>
           </motion.div>
         </motion.div>

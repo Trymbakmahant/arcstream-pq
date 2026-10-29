@@ -20,7 +20,7 @@ export function useSubmissionTime(escrowId: bigint, milestoneIndex: number, proo
     staleTime: Infinity,
     retry: 1,
     queryFn: async (): Promise<number | null> => {
-      if (!client || !VAULT_ADDRESS) return null
+      if (!client || !VAULT_ADDRESS || !DEPLOY_TX_HASH) return null
       const deployReceipt = await client.getTransactionReceipt({ hash: DEPLOY_TX_HASH })
       const logs = await client.getLogs({
         address: VAULT_ADDRESS,

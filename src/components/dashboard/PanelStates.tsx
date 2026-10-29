@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ConnectKitButton } from 'connectkit'
 import { Inbox, Loader2, TriangleAlert, Wallet } from 'lucide-react'
+import { NETWORK } from '@/lib/network'
 
 export function Notice({ icon, heading, children }: { icon: ReactNode; heading: string; children: ReactNode }) {
   return (
@@ -16,7 +17,7 @@ export function Notice({ icon, heading, children }: { icon: ReactNode; heading: 
 
 export const NotDeployed = () => (
   <Notice icon={<TriangleAlert className="size-5" />} heading="Contract not deployed yet">
-    Escrows will appear here once ArcStreamVault is deployed to Arc Testnet and connected to this app.
+    ArcStreamVault has not been deployed to {NETWORK.label} yet, so there is nothing to read. Escrows will appear here once it is deployed and connected to this app.
   </Notice>
 )
 
@@ -38,7 +39,7 @@ export const LoadingState = () => (
       <div key={i} className="h-16 animate-pulse rounded-xl bg-brandSecondary/25" />
     ))}
     <p className="flex items-center gap-2 text-sm text-brandHighlight/70">
-      <Loader2 className="size-4 animate-spin" /> Reading escrows from Arc Testnet
+      <Loader2 className="size-4 animate-spin" /> Reading escrows from {NETWORK.label}
     </p>
   </div>
 )
@@ -50,7 +51,7 @@ export const NotConnected = () => (
     </span>
     <h3 className="display mt-4 text-lg font-bold text-brandHighlight">Wallet Not Connected</h3>
     <p className="mt-2 max-w-sm text-pretty text-sm text-brandHighlight/80">
-      Connect your wallet on Arc Testnet to view escrows you&apos;ve funded or work assigned to you.
+      Connect your wallet on {NETWORK.label} to view escrows you&apos;ve funded or work assigned to you.
     </p>
     <ConnectKitButton.Custom>
       {({ show }) => (

@@ -44,7 +44,7 @@ export function parseOnchainError(error: unknown): string {
 
   const lower = message.toLowerCase()
   if (lower.includes('insufficient funds') || lower.includes('exceeds balance')) {
-    return 'Insufficient balance. Add testnet USDC and try again.'
+    return 'Insufficient balance. Add USDC to your wallet and try again.'
   }
   if (lower.includes('allowance')) return 'USDC allowance is too low. Approve the amount first.'
   if (lower.includes('network') || lower.includes('timeout')) {

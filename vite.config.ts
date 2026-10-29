@@ -37,5 +37,7 @@ export default defineConfig({
   server: {
     allowedHosts: true,
     cors: true,
+    // Onramp session API (server/onramp.ts); the Circle API key stays on that server.
+    proxy: { '/api': 'http://127.0.0.1:8787' },
   },
 })
