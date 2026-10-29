@@ -31,3 +31,7 @@ Thumbs.db
 # Arc Studio CLI local state
 .arc-studio/
 
+# Local Video Script
+docs/VIDEO_DEMO_SCRIPT.md
+
+
