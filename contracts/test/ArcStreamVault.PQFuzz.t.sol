@@ -104,7 +104,7 @@ contract ArcStreamVaultPQFuzzTest is ArcStreamVaultPQBase {
         a[0] = UNIT;
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidPQPublicKey.selector);
-        vault.createEscrow(contractor, a, _descs(1), new bytes(len));
+        vault.createEscrow(contractor, a, _descs(1), new bytes(len), 0);
     }
 
     function testFuzz_AnyThirtyTwoByteKeyAccepted(bytes32 keySeed) public {

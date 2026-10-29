@@ -113,3 +113,52 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Print the invoice only: hide everything on the page except #invoice-root (see InvoiceModal). */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body.invoice-open > *:not(#invoice-root) {
+    display: none !important;
+  }
+  #invoice-root .invoice-overlay {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    padding: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+  }
+  #invoice-root .invoice-panel {
+    max-height: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+  #invoice-root .invoice-scroll {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  #invoice-root .no-print {
+    display: none !important;
+  }
+  #invoice-root article {
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #invoice-root tr,
+  #invoice-root section {
+    break-inside: avoid;
+  }
+}

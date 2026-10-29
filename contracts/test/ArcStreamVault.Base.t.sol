@@ -55,7 +55,7 @@ abstract contract ArcStreamVaultTestBase is Test {
         uint256[] memory a = _three();
         string[] memory d = _descs(3);
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, "");
+        id = vault.createEscrow(contractor, a, d, "", 0);
     }
 
     // ------------------------------------------------------------ PQ helpers
@@ -68,7 +68,7 @@ abstract contract ArcStreamVaultTestBase is Test {
         }
         string[] memory d = _descs(n);
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, key);
+        id = vault.createEscrow(contractor, a, d, key, 0);
     }
 
     /// Employer-created protected escrow with `n` milestones under `pqKey`.
@@ -135,6 +135,25 @@ abstract contract ArcStreamVaultTestBase is Test {
     function _refund(uint256 id) internal {
         vm.prank(employer);
         vault.refundRemaining(id, "");
+    }
+
+    uint256 internal constant DEF_PERIOD = 7 days;
+    uint256 internal constant MIN_PERIOD = 1 days;
+    uint256 internal constant MAX_PERIOD = 30 days;
+
+    /// Three-milestone escrow (M0/M1/M2) with an explicit inspection period and optional PQ key.
+    function _createPeriod(uint256 period, bytes memory key) internal returns (uint256 id) {
+        uint256[] memory a = _three();
+        string[] memory d = _descs(3);
+        vm.prank(employer);
+        id = vault.createEscrow(contractor, a, d, key, period);
+    }
+
+    /// Current contractor claims an uncontested milestone.
+    function _claimU(uint256 id, uint256 i) internal {
+        address c = vault.getEscrow(id).contractor;
+        vm.prank(c);
+        vault.claimUncontestedMilestone(id, i);
     }
 
     function _remaining(uint256 id) internal view returns (uint256) {

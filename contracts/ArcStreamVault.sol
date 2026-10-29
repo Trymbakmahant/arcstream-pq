@@ -15,7 +15,15 @@ interface IArcPQ {
 
 /// @title ArcStreamVault
 /// @notice Noncustodial milestone approval and payment accounting for ERC-20 USDC.
-/// @dev The lifecycle is contractor submission, employer approval, then milestone release.
+/// @dev The lifecycle is contractor submission, an inspection window, then employer approval
+/// and release, or a contractor claim after the window even without employer approval.
+/// During the window the employer's only tools for submitted work are approval (and release)
+/// or reaching a mutualCancel agreement, which requires the contractor's consent. There is no
+/// unilateral employer reject/dispute mechanism or arbiter. A junk proof that the employer
+/// fails to contest through mutual cancellation can therefore be paid out after the window.
+/// Every resubmission before approval restarts the window, giving the employer a full period
+/// to review the latest proof. Minor block.timestamp validator skew is negligible against
+/// the minimum one-day inspection window. Payment requires a claim transaction, not a timer.
 /// The employer controls approvals but cannot unilaterally refund submitted, unapproved work.
 /// Employer refunds cover only unsubmitted, unapproved milestones; contractor termination
 /// voluntarily waives unapproved work. Approved funds remain claimable after a refund.
@@ -25,13 +33,14 @@ interface IArcPQ {
 /// blocklisted recipient can only block its own claim. Contractor credit follows the current
 /// contractor role and can be claimed after updateContractor; the employer has no rotation.
 /// Unclaimed settlement credits remain included in the escrow's remaining balance.
-/// Submission protects against unilateral employer refunds, not refusal to approve. Mutual
-/// cancellation is the only dispute resolution when submitted work is not approved: no timeout,
-/// arbiter, or unilateral payout exists. Cooperation is required to resolve such a dispute.
+/// Submission protects against unilateral employer refunds. Mutual cancellation is the only
+/// cooperative dispute resolution; an unapproved milestone otherwise becomes claimable by
+/// the contractor when its inspection window expires, provided the escrow remains active.
 /// Only the current contractor can rotate its payout wallet; the employer cannot change it.
 /// Rotation remains available after termination. USDC issuer restrictions still apply to
-/// the new address and are not bypassed. A USDC-blocklisted contractor causes release to
-/// revert, but does not affect refunds to an otherwise eligible employer.
+/// the new address and are not bypassed. A USDC-blocklisted contractor can rotate via
+/// updateContractor before claiming. A blocked payout reverts, but does not affect refunds
+/// to an otherwise eligible employer.
 /// Token-level restrictions on the vault or employer can
 /// still prevent transfers. The constructor token must be trusted, standard, non-rebasing
 /// USDC with six decimals; amounts are raw units (1 USDC = 1_000_000). No native gas-token
@@ -68,6 +77,7 @@ contract ArcStreamVault is ReentrancyGuard {
         bool isReleased;
         string workProofHash;
         bool isWorkSubmitted;
+        uint256 submittedAt;
     }
 
     struct MutualCancelProposal {
@@ -86,6 +96,7 @@ contract ArcStreamVault is ReentrancyGuard {
         bytes32 pqCommitment;
         bool isPQProtected;
         bytes pqPublicKey;
+        uint256 inspectionPeriod;
     }
 
     error Unauthorized();
@@ -112,6 +123,8 @@ contract ArcStreamVault is ReentrancyGuard {
     error InvalidQuantumProof();
     error InvalidPQPublicKey();
     error PQPrecompileUnavailable();
+    error InvalidInspectionPeriod();
+    error InspectionPeriodActive();
 
     /// @notice An SLH-DSA-SHA2-128s signature was verified; milestoneIndex is the action index.
     /// @dev Refund actions use milestoneCount; pqCommitment is the public key's keccak256 fingerprint.
@@ -128,6 +141,9 @@ contract ArcStreamVault is ReentrancyGuard {
     event MilestoneReleased(
         uint256 indexed escrowId, uint256 milestoneIndex, address indexed contractor, uint256 amount
     );
+    event UncontestedMilestoneClaimed(
+        uint256 indexed escrowId, uint256 milestoneIndex, address indexed contractor, uint256 amount
+    );
     event EscrowRefunded(uint256 indexed escrowId, address indexed employer, uint256 amount);
     event ContractorUpdated(
         uint256 indexed escrowId, address indexed previousContractor, address indexed newContractor
@@ -140,6 +156,15 @@ contract ArcStreamVault is ReentrancyGuard {
     event EscrowMutuallyCancelled(uint256 indexed escrowId, uint256 contractorShare, uint256 employerShare);
     event SettlementClaimed(uint256 indexed escrowId, address indexed recipient, uint256 amount);
     event MutualCancelProposalCancelled(uint256 indexed escrowId, address indexed proposer);
+
+    /// @notice Inspection window used when creation specifies zero.
+    uint256 public constant DEFAULT_INSPECTION_PERIOD = 7 days;
+
+    /// @notice Minimum configurable inspection window.
+    uint256 public constant MIN_INSPECTION_PERIOD = 1 days;
+
+    /// @notice Maximum configurable inspection window.
+    uint256 public constant MAX_INSPECTION_PERIOD = 30 days;
 
     /// @notice Maximum proof length in bytes.
     uint256 public constant MAX_WORK_PROOF_LENGTH = 256;
@@ -223,12 +248,16 @@ contract ArcStreamVault is ReentrancyGuard {
     /// @param amounts Positive milestone amounts in six-decimal USDC base units.
     /// @param descriptions Descriptions corresponding to each milestone amount.
     /// @param pqPublicKey Immutable 32-byte SLH-DSA-SHA2-128s public key; empty disables protection.
+    /// @param inspectionPeriod Review window in seconds; zero selects seven days, otherwise
+    /// between one and thirty days inclusive. After this window the contractor can claim
+    /// submitted work without employer approval; each resubmission restarts the full window.
     /// @return escrowId Newly created identifier, starting at 1.
     function createEscrow(
         address contractor,
         uint256[] calldata amounts,
         string[] calldata descriptions,
-        bytes calldata pqPublicKey
+        bytes calldata pqPublicKey,
+        uint256 inspectionPeriod
     ) external nonReentrant returns (uint256 escrowId) {
         if (contractor == address(0) || contractor == msg.sender) revert InvalidContractor();
         uint256 count = amounts.length;
@@ -244,22 +273,17 @@ contract ArcStreamVault is ReentrancyGuard {
             if (ok && ret.length == 0) revert PQPrecompileUnavailable();
         }
 
-        escrowId = ++escrowCount;
-        uint256 total;
-        for (uint256 i; i < count;) {
-            uint256 amount = amounts[i];
-            if (amount == 0) revert InvalidAmount();
-            total += amount;
-            Milestone storage milestone = milestones[escrowId][i];
-            milestone.amount = amount;
-            milestone.description = descriptions[i];
-            // i < count <= MAX_MILESTONES (50), so incrementing i cannot overflow.
-            unchecked {
-                ++i;
-            }
+        if (inspectionPeriod == 0) {
+            inspectionPeriod = DEFAULT_INSPECTION_PERIOD;
+        } else if (inspectionPeriod < MIN_INSPECTION_PERIOD || inspectionPeriod > MAX_INSPECTION_PERIOD) {
+            revert InvalidInspectionPeriod();
         }
 
+        escrowId = ++escrowCount;
+        uint256 total = _initializeMilestones(escrowId, amounts, descriptions);
+
         EscrowAgreement storage agreement = escrows[escrowId];
+        agreement.inspectionPeriod = inspectionPeriod;
         agreement.employer = msg.sender;
         agreement.contractor = contractor;
         agreement.totalDeposited = total;
@@ -309,6 +333,8 @@ contract ArcStreamVault is ReentrancyGuard {
     /// @notice Submit or replace work proof for an unapproved milestone.
     /// @dev Only the current contractor may submit. Approval freezes the proof, and
     /// termination permanently disables submission. First submission blocks employer refunds.
+    /// Every submission, including replacement before approval, restarts the inspection window
+    /// so the employer always has the full period to review the latest proof.
     /// @param escrowId Existing escrow identifier.
     /// @param milestoneIndex Zero-based milestone index.
     /// @param workProofHash Nonempty proof reference, at most MAX_WORK_PROOF_LENGTH bytes.
@@ -332,6 +358,7 @@ contract ArcStreamVault is ReentrancyGuard {
             submittedUnapprovedCount[escrowId] += 1;
         }
         milestone.workProofHash = workProofHash;
+        milestone.submittedAt = block.timestamp;
 
         emit WorkSubmitted(escrowId, milestoneIndex, workProofHash);
     }
@@ -399,6 +426,43 @@ contract ArcStreamVault is ReentrancyGuard {
         usdc.safeTransfer(contractor, amount);
     }
 
+    /// @notice Claim submitted work after its inspection window, with or without employer approval.
+    /// @dev Only the current contractor may claim, and only while the escrow is active.
+    /// No PQ proof is required. Resubmission before approval restarts the full review window.
+    /// The employer has no unilateral reject/dispute: inside the window it can approve (and
+    /// release) or reach mutualCancel with the contractor's consent. Even a junk proof can
+    /// be paid after the window without employer approval. Minor timestamp skew is negligible
+    /// against the minimum one-day window. A blocklisted contractor may updateContractor
+    /// before claiming; token restrictions still apply. Effects and the dedicated event
+    /// precede transfer, and a rejected transfer atomically rolls back all changes.
+    /// @param escrowId Existing, active escrow identifier.
+    /// @param milestoneIndex Zero-based milestone index.
+    function claimUncontestedMilestone(uint256 escrowId, uint256 milestoneIndex) external nonReentrant {
+        EscrowAgreement storage agreement = _getEscrow(escrowId);
+        if (msg.sender != agreement.contractor) revert Unauthorized();
+        if (agreement.isTerminated) revert EscrowTerminated();
+        if (milestoneIndex >= agreement.milestoneCount) revert MilestoneOutOfRange();
+        Milestone storage milestone = milestones[escrowId][milestoneIndex];
+        if (!milestone.isWorkSubmitted) revert WorkNotSubmitted();
+        if (milestone.isReleased) revert MilestoneAlreadyReleased();
+        if (block.timestamp < milestone.submittedAt + agreement.inspectionPeriod) revert InspectionPeriodActive();
+
+        uint256 amount = milestone.amount;
+        uint256 remaining = agreement.totalDeposited - agreement.totalReleased - refundedAmounts[escrowId];
+        if (amount > remaining) revert InvalidAmount();
+        if (milestone.isApproved) {
+            approvedPending[escrowId] -= amount;
+        } else {
+            submittedUnapprovedCount[escrowId] -= 1;
+        }
+        milestone.isApproved = true;
+        milestone.isReleased = true;
+        agreement.totalReleased += amount;
+
+        emit UncontestedMilestoneClaimed(escrowId, milestoneIndex, agreement.contractor, amount);
+        usdc.safeTransfer(agreement.contractor, amount);
+    }
+
     /// @notice Terminate and refund all unapproved milestone principal to the employer.
     /// @dev Either party may call without the other's signature. Employer refunds cover only
     /// unsubmitted, unapproved milestones: the employer must approve submitted work or reach
@@ -447,8 +511,9 @@ contract ArcStreamVault is ReentrancyGuard {
     /// its own claim. Contractor credit follows the current contractor role, which can rotate
     /// via updateContractor before claiming; the employer has no rotation. Unclaimed credits
     /// remain in the unreleased, unrefunded balance until claimed.
-    /// This is the only dispute resolution when work is submitted but the employer refuses approval:
-    /// no timeout or arbiter exists, and neither party can force acceptance of a proposed split.
+    /// This is the only cooperative dispute resolution; neither party can force acceptance
+    /// of a split and there is no unilateral employer reject/dispute or arbiter. A pending
+    /// proposal does not stop the inspection clock or prevent a contractor claim after expiry.
     /// @param escrowId Existing escrow identifier.
     /// @param contractorShare Amount to pay the current contractor, in raw USDC units.
     /// @param employerShare Amount to refund to the employer, in raw USDC units.
@@ -548,6 +613,21 @@ contract ArcStreamVault is ReentrancyGuard {
         EscrowAgreement storage agreement = _getEscrow(escrowId);
         if (index >= agreement.milestoneCount) revert MilestoneOutOfRange();
         return milestones[escrowId][index];
+    }
+
+    /// @notice Read the inspection deadline for submitted, unreleased work, or zero otherwise.
+    /// @dev Returns the historical deadline even after termination or settlement; this is not
+    /// an eligibility check. claimUncontestedMilestone additionally requires an active escrow
+    /// and the current contractor as caller. Resubmission restarts this deadline.
+    /// @param escrowId Existing escrow identifier; unknown identifiers revert.
+    /// @param milestoneIndex Zero-based milestone index; out-of-range indices revert.
+    /// @return Deadline timestamp, or zero when work is unsubmitted or already released.
+    function uncontestedClaimTime(uint256 escrowId, uint256 milestoneIndex) external view returns (uint256) {
+        EscrowAgreement storage agreement = _getEscrow(escrowId);
+        if (milestoneIndex >= agreement.milestoneCount) revert MilestoneOutOfRange();
+        Milestone storage milestone = milestones[escrowId][milestoneIndex];
+        if (!milestone.isWorkSubmitted || milestone.isReleased) return 0;
+        return milestone.submittedAt + agreement.inspectionPeriod;
     }
 
     /// @notice Read all milestones of an existing escrow in milestone order.
@@ -673,6 +753,27 @@ contract ArcStreamVault is ReentrancyGuard {
         if (abi.decode(ret, (uint256)) != 1) revert InvalidQuantumProof();
 
         emit QuantumProofVerified(escrowId, action, agreement.pqCommitment);
+    }
+
+    /// @dev Initialize validated milestone arrays separately to limit creation's stack usage.
+    function _initializeMilestones(
+        uint256 escrowId,
+        uint256[] calldata amounts,
+        string[] calldata descriptions
+    ) private returns (uint256 total) {
+        uint256 count = amounts.length;
+        for (uint256 i; i < count;) {
+            uint256 amount = amounts[i];
+            if (amount == 0) revert InvalidAmount();
+            total += amount;
+            Milestone storage milestone = milestones[escrowId][i];
+            milestone.amount = amount;
+            milestone.description = descriptions[i];
+            // i < count <= MAX_MILESTONES (50), so incrementing i cannot overflow.
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function _indexUserEscrow(uint256 escrowId, address user) private {

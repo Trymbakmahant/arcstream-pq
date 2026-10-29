@@ -31,7 +31,7 @@ contract ArcStreamVaultFuzzTest is ArcStreamVaultTestBase {
         uint256 empBefore = usdc.balanceOf(employer);
 
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, "");
+        uint256 id = vault.createEscrow(contractor, a, d, "", 0);
 
         ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
         assertEq(e.totalDeposited, sum);
@@ -55,7 +55,7 @@ contract ArcStreamVaultFuzzTest is ArcStreamVaultTestBase {
         uint256 empStart = usdc.balanceOf(employer);
 
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, "");
+        uint256 id = vault.createEscrow(contractor, a, d, "", 0);
 
         uint256 approvedSum;
         for (uint256 i; i < n; ++i) {
@@ -117,7 +117,7 @@ contract ArcStreamVaultFuzzTest is ArcStreamVaultTestBase {
         _fundEmployer(total);
         string[] memory d = _descs(n);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, "");
+        uint256 id = vault.createEscrow(contractor, a, d, "", 0);
 
         uint256 approvedSum;
         for (uint256 i; i < n; ++i) {
@@ -143,7 +143,7 @@ contract ArcStreamVaultFuzzTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(1);
         _fundEmployer(amount);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, "");
+        uint256 id = vault.createEscrow(contractor, a, d, "", 0);
 
         vm.prank(contractor);
         vault.updateContractor(id, to);

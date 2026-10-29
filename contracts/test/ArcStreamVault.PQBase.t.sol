@@ -24,7 +24,7 @@ abstract contract ArcStreamVaultPQBase is ArcStreamVaultTestBase {
             a[i] = UNIT;
         }
         vm.prank(employer2);
-        id = vault.createEscrow(contractor, a, _descs(n), key);
+        id = vault.createEscrow(contractor, a, _descs(n), key, 0);
     }
 
     /// Submit + approve milestone `i` of `id` (contractor submits, the escrow's employer approves).

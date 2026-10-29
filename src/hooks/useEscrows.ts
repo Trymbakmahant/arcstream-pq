@@ -11,6 +11,8 @@ export interface MilestoneView {
   isReleased: boolean
   workProofHash: string
   isWorkSubmitted: boolean
+  /** Unix seconds when the latest proof was submitted (0 if none). */
+  submittedAt: number
 }
 
 export interface EscrowView {
@@ -26,6 +28,8 @@ export interface EscrowView {
   pqCommitment: Hex
   pqPublicKey: Hex
   isPQProtected: boolean
+  /** Review window in seconds before the contractor may claim unapproved work. */
+  inspectionPeriod: number
   milestones: MilestoneView[]
 }
 
@@ -99,6 +103,7 @@ export function useEscrows() {
             pqCommitment: agreement.pqCommitment,
             pqPublicKey: agreement.pqPublicKey,
             isPQProtected: agreement.isPQProtected,
+            inspectionPeriod: Number(agreement.inspectionPeriod),
             milestones: milestones.map((m) => ({
               amount: m.amount,
               description: m.description,
@@ -106,6 +111,7 @@ export function useEscrows() {
               isReleased: m.isReleased,
               workProofHash: m.workProofHash,
               isWorkSubmitted: m.isWorkSubmitted,
+              submittedAt: Number(m.submittedAt),
             })),
           }
         }),

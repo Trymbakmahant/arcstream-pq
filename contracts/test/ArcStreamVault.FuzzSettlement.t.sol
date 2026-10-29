@@ -20,7 +20,7 @@ contract ArcStreamVaultFuzzSettlementTest is ArcStreamVaultTestBase {
         usdc.mint(employer, total);
         string[] memory d = _descs(n);
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, "");
+        id = vault.createEscrow(contractor, a, d, "", 0);
 
         for (uint256 i; i < n; ++i) {
             if ((submitMask >> i) & 1 == 1) {

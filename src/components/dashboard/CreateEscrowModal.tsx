@@ -15,15 +15,21 @@ export function CreateEscrowModal({ open, onClose, onFund }: Props) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
+    // Keep the page behind the modal from scrolling while it is open.
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previousOverflow
+    }
   }, [open, onClose])
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[7000] flex items-start justify-center overflow-y-auto bg-brandHighlight/60 p-4 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-[7000] flex items-center justify-center bg-brandHighlight/60 p-3 backdrop-blur-sm sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -33,23 +39,26 @@ export function CreateEscrowModal({ open, onClose, onFund }: Props) {
           aria-label="Create escrow"
         >
           <motion.div
-            className="relative my-4 w-full max-w-2xl"
-            initial={{ y: 20 }}
-            animate={{ y: 0 }}
-            exit={{ y: 20 }}
+            className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-brandSecondary bg-brandMain shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
+            initial={{ y: 16, scale: 0.98 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 16, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-3 top-3 z-10 flex size-11 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
-              aria-label="Close"
-            >
-              <X className="size-5" />
-            </button>
-            <div className="rounded-2xl bg-brandMain">
-              <CreateEscrowCard onCreated={onClose} onFund={onFund} />
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-brandSecondary bg-brandMain px-6 py-3">
+              <h2 className="display text-xl font-bold text-brandHighlight">Create Escrow</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex size-11 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
+                aria-label="Close"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <CreateEscrowCard embedded onCreated={onClose} onFund={onFund} />
             </div>
           </motion.div>
         </motion.div>

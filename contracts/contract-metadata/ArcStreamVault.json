@@ -1,13 +1,27 @@
 {
-  "contractAddress": "0xbfeba9a6fe6b81f583417d426a3957d713f30965",
+  "contractAddress": "0x464504fe41fef085413c52cfc6fdbeb15637c0fd",
   "network": "ARC-TESTNET",
   "deployerWalletId": "3c2464b2-8369-52e2-a782-800bbeca5396",
   "contract_code_path": "/home/user/app/contracts/ArcStreamVault.sol",
   "contract_compiled_code_path": "/home/user/app/contracts/out/ArcStreamVault.sol/ArcStreamVault.json",
   "contract_network_and_links": {
-    "Arc Testnet": "https://explorer.testnet.arc.io/address/0xbfeba9a6fe6b81f583417d426a3957d713f30965"
+    "Arc Testnet": "https://explorer.testnet.arc.io/address/0x464504fe41fef085413c52cfc6fdbeb15637c0fd"
   },
   "contract_deployments": [
+    {
+      "chain": "Arc Testnet",
+      "address": "0x464504fe41fef085413c52cfc6fdbeb15637c0fd",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x464504fe41fef085413c52cfc6fdbeb15637c0fd",
+      "txHash": "0x571bc7bad262af6a98ee95352d9a43734c14286676fde496141017254657cfce",
+      "deployedAt": "2026-10-29T07:32:37.433Z"
+    },
+    {
+      "chain": "Arc Testnet",
+      "address": "0x885ffa04b92eaa3d0fd11c3b05f425bcbe26de53",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x885ffa04b92eaa3d0fd11c3b05f425bcbe26de53",
+      "txHash": "0x87239976031b6b7fc60da6105e9679e7b5f2c669fe654871b0f16136f3d6118f",
+      "deployedAt": "2026-10-28T18:20:46.597Z"
+    },
     {
       "chain": "Arc Testnet",
       "address": "0xbfeba9a6fe6b81f583417d426a3957d713f30965",
@@ -44,6 +58,45 @@
     },
     {
       "type": "function",
+      "name": "ARC_PQ_PRECOMPILE",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DEFAULT_INSPECTION_PERIOD",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "MAX_INSPECTION_PERIOD",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "MAX_MILESTONES",
       "inputs": [],
       "outputs": [
@@ -70,7 +123,7 @@
     },
     {
       "type": "function",
-      "name": "MAX_PQ_PROOF_DEPTH",
+      "name": "MAX_WORK_PROOF_LENGTH",
       "inputs": [],
       "outputs": [
         {
@@ -83,7 +136,46 @@
     },
     {
       "type": "function",
-      "name": "MAX_WORK_PROOF_LENGTH",
+      "name": "MIN_INSPECTION_PERIOD",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "PQ_DOMAIN",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "PQ_PUBLIC_KEY_LENGTH",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "PQ_SIGNATURE_LENGTH",
       "inputs": [],
       "outputs": [
         {
@@ -159,6 +251,24 @@
     },
     {
       "type": "function",
+      "name": "claimUncontestedMilestone",
+      "inputs": [
+        {
+          "name": "escrowId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "milestoneIndex",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "contractorSettlementOwed",
       "inputs": [
         {
@@ -196,9 +306,14 @@
           "internalType": "string[]"
         },
         {
-          "name": "pqCommitment",
-          "type": "bytes32",
-          "internalType": "bytes32"
+          "name": "pqPublicKey",
+          "type": "bytes",
+          "internalType": "bytes"
+        },
+        {
+          "name": "inspectionPeriod",
+          "type": "uint256",
+          "internalType": "uint256"
         }
       ],
       "outputs": [
@@ -297,6 +412,16 @@
               "name": "isPQProtected",
               "type": "bool",
               "internalType": "bool"
+            },
+            {
+              "name": "pqPublicKey",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "inspectionPeriod",
+              "type": "uint256",
+              "internalType": "uint256"
             }
           ]
         }
@@ -353,6 +478,11 @@
               "name": "isWorkSubmitted",
               "type": "bool",
               "internalType": "bool"
+            },
+            {
+              "name": "submittedAt",
+              "type": "uint256",
+              "internalType": "uint256"
             }
           ]
         }
@@ -404,6 +534,11 @@
               "name": "isWorkSubmitted",
               "type": "bool",
               "internalType": "bool"
+            },
+            {
+              "name": "submittedAt",
+              "type": "uint256",
+              "internalType": "uint256"
             }
           ]
         }
@@ -555,24 +690,24 @@
     },
     {
       "type": "function",
-      "name": "pqCommitmentUsed",
+      "name": "pqSigningMessage",
       "inputs": [
         {
-          "name": "employer",
-          "type": "address",
-          "internalType": "address"
+          "name": "escrowId",
+          "type": "uint256",
+          "internalType": "uint256"
         },
         {
-          "name": "commitment",
-          "type": "bytes32",
-          "internalType": "bytes32"
+          "name": "action",
+          "type": "uint256",
+          "internalType": "uint256"
         }
       ],
       "outputs": [
         {
-          "name": "used",
-          "type": "bool",
-          "internalType": "bool"
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
       "stateMutability": "view"
@@ -673,6 +808,30 @@
       "outputs": [
         {
           "name": "count",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "uncontestedClaimTime",
+      "inputs": [
+        {
+          "name": "escrowId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "milestoneIndex",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
           "type": "uint256",
           "internalType": "uint256"
         }
@@ -980,6 +1139,37 @@
     },
     {
       "type": "event",
+      "name": "UncontestedMilestoneClaimed",
+      "inputs": [
+        {
+          "name": "escrowId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "milestoneIndex",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "contractor",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
       "name": "WorkSubmitted",
       "inputs": [
         {
@@ -1010,11 +1200,6 @@
     },
     {
       "type": "error",
-      "name": "CommitmentAlreadyUsed",
-      "inputs": []
-    },
-    {
-      "type": "error",
       "name": "EmptyWorkProof",
       "inputs": []
     },
@@ -1035,6 +1220,11 @@
     },
     {
       "type": "error",
+      "name": "InspectionPeriodActive",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "InvalidAmount",
       "inputs": []
     },
@@ -1045,7 +1235,17 @@
     },
     {
       "type": "error",
+      "name": "InvalidInspectionPeriod",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "InvalidMilestoneCount",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidPQPublicKey",
       "inputs": []
     },
     {
@@ -1091,6 +1291,11 @@
     {
       "type": "error",
       "name": "NothingToRefund",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "PQPrecompileUnavailable",
       "inputs": []
     },
     {

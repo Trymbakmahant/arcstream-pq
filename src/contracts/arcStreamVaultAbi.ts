@@ -26,6 +26,32 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "function",
+    "name": "DEFAULT_INSPECTION_PERIOD",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_INSPECTION_PERIOD",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "MAX_MILESTONES",
     "inputs": [],
     "outputs": [
@@ -53,6 +79,19 @@ export const arcStreamVaultAbi = [
   {
     "type": "function",
     "name": "MAX_WORK_PROOF_LENGTH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_INSPECTION_PERIOD",
     "inputs": [],
     "outputs": [
       {
@@ -167,6 +206,24 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "function",
+    "name": "claimUncontestedMilestone",
+    "inputs": [
+      {
+        "name": "escrowId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "contractorSettlementOwed",
     "inputs": [
       {
@@ -207,6 +264,11 @@ export const arcStreamVaultAbi = [
         "name": "pqPublicKey",
         "type": "bytes",
         "internalType": "bytes"
+      },
+      {
+        "name": "inspectionPeriod",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -310,6 +372,11 @@ export const arcStreamVaultAbi = [
             "name": "pqPublicKey",
             "type": "bytes",
             "internalType": "bytes"
+          },
+          {
+            "name": "inspectionPeriod",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -366,6 +433,11 @@ export const arcStreamVaultAbi = [
             "name": "isWorkSubmitted",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "submittedAt",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -417,6 +489,11 @@ export const arcStreamVaultAbi = [
             "name": "isWorkSubmitted",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "submittedAt",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -686,6 +763,30 @@ export const arcStreamVaultAbi = [
     "outputs": [
       {
         "name": "count",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "uncontestedClaimTime",
+    "inputs": [
+      {
+        "name": "escrowId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -993,6 +1094,37 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "event",
+    "name": "UncontestedMilestoneClaimed",
+    "inputs": [
+      {
+        "name": "escrowId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "milestoneIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "contractor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "WorkSubmitted",
     "inputs": [
       {
@@ -1043,12 +1175,22 @@ export const arcStreamVaultAbi = [
   },
   {
     "type": "error",
+    "name": "InspectionPeriodActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidAmount",
     "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidContractor",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidInspectionPeriod",
     "inputs": []
   },
   {

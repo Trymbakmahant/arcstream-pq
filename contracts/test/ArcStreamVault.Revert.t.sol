@@ -25,7 +25,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidContractor.selector);
-        vault.createEscrow(address(0), a, d, "");
+        vault.createEscrow(address(0), a, d, "", 0);
     }
 
     function test_Revert_Create_ContractorIsEmployer() public {
@@ -33,7 +33,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidContractor.selector);
-        vault.createEscrow(employer, a, d, "");
+        vault.createEscrow(employer, a, d, "", 0);
     }
 
     function test_Revert_Create_ArrayLengthMismatch() public {
@@ -41,7 +41,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(2);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.ArrayLengthMismatch.selector);
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
     }
 
     function test_Revert_Create_ZeroMilestones() public {
@@ -49,7 +49,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = new string[](0);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidMilestoneCount.selector);
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
     }
 
     function test_Revert_Create_TooManyMilestones() public {
@@ -60,7 +60,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(51);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidMilestoneCount.selector);
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
     }
 
     function test_Revert_Create_ZeroAmount() public {
@@ -69,7 +69,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidAmount.selector);
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
         assertEq(vault.escrowCount(), 0);
     }
 
@@ -80,7 +80,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(2);
         vm.prank(employer);
         vm.expectRevert(stdError.arithmeticError);
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
     }
 
     function test_Revert_Create_InsufficientAllowance() public {
@@ -90,7 +90,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(employer);
         vm.expectRevert();
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
         assertEq(vault.escrowCount(), 0);
     }
 
@@ -102,7 +102,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(poor);
         vm.expectRevert();
-        vault.createEscrow(contractor, a, d, "");
+        vault.createEscrow(contractor, a, d, "", 0);
     }
 
     // ----------------------------------------- UnexpectedTokenReceipt (fee)
@@ -122,7 +122,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.UnexpectedTokenReceipt.selector);
-        v.createEscrow(contractor, a, d, "");
+        v.createEscrow(contractor, a, d, "", 0);
         // atomic: no escrow persisted, no funds moved
         assertEq(v.escrowCount(), 0);
         assertEq(t.balanceOf(address(v)), 0);
@@ -135,7 +135,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         string[] memory d = _descs(3);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.UnexpectedTokenReceipt.selector);
-        v.createEscrow(contractor, a, d, "");
+        v.createEscrow(contractor, a, d, "", 0);
         assertEq(v.escrowCount(), 0);
     }
 
@@ -144,7 +144,7 @@ contract ArcStreamVaultRevertTest is ArcStreamVaultTestBase {
         uint256[] memory a = _three();
         string[] memory d = _descs(3);
         vm.prank(employer);
-        assertEq(v.createEscrow(contractor, a, d, ""), 1);
+        assertEq(v.createEscrow(contractor, a, d, "", 0), 1);
     }
 
     // ------------------------------------------------------ EscrowNotFound

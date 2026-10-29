@@ -30,8 +30,8 @@ export const NETWORKS: Record<NetworkId, NetworkInfo> = {
     rpcUrl: arcTestnet.rpcUrls.default.http[0],
     explorerUrl: arcTestnet.blockExplorers.default.url,
     usdc: USDC,
-    vault: '0x885ffa04b92eaa3d0fd11c3b05f425bcbe26de53',
-    deployTx: '0x87239976031b6b7fc60da6105e9679e7b5f2c669fe654871b0f16136f3d6118f',
+    vault: '0x464504fe41fef085413c52cfc6fdbeb15637c0fd',
+    deployTx: '0x571bc7bad262af6a98ee95352d9a43734c14286676fde496141017254657cfce',
     isMainnet: false,
   },
   mainnet: {

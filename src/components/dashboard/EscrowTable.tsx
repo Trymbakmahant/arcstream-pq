@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ExternalLink, Fingerprint, Loader2 } from 'lucide-react'
+import { ExternalLink, Fingerprint, Loader2, Receipt } from 'lucide-react'
 import { addressUrl } from '@/contracts/vault'
 import type { EscrowView, MilestoneStatus } from '@/hooks/useEscrows'
 import { useVaultActions } from '@/hooks/useVaultActions'
@@ -7,6 +7,9 @@ import { fmtUsdc, shortAddress } from '@/lib/money'
 import type { MilestoneRow, RowRole } from '@/lib/rows'
 import { milestoneTitle } from '@/lib/text'
 import type { PqAuthRequest } from '@/components/PqAuthModal'
+import { useInvoice } from '@/components/dashboard/invoiceContext'
+import { useNow } from '@/hooks/useNow'
+import { claimableAt, formatDuration } from '@/lib/inspection'
 
 interface Props {
   rows: MilestoneRow[]
@@ -51,6 +54,8 @@ const btnGhost =
 export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Props) {
   const actions = useVaultActions()
   const [busy, setBusy] = useState<string | null>(null)
+  const now = useNow()
+  const { openInvoice } = useInvoice()
 
   const run = async (key: string, fn: () => Promise<boolean>) => {
     setBusy(key)
@@ -179,6 +184,34 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
                         Submit Proof
                       </button>
                     )}
+                    {role === 'contractor' && status === 'WORK SUBMITTED' && (() => {
+                      const at = claimableAt(escrow, milestone)
+                      if (at === null) return null
+                      return at <= now ? (
+                        <button
+                          type="button"
+                          className={btnPrimary}
+                          disabled={busy !== null}
+                          onClick={() => {
+                            void run(key, () => actions.claimUncontested(escrow.id, index))
+                          }}
+                        >
+                          {working && <Loader2 className="size-3.5 animate-spin" />}
+                          Claim Payout
+                        </button>
+                      ) : (
+                        <span className="text-xs font-medium text-brandHighlight/70">Claimable in {formatDuration(at - now)}</span>
+                      )
+                    })()}
+                    {role === 'employer' && status === 'WORK SUBMITTED' && (() => {
+                      const at = claimableAt(escrow, milestone)
+                      if (at === null) return null
+                      return (
+                        <span className="w-full text-right text-[0.6875rem] font-medium text-brandHighlight/70">
+                          {at <= now ? 'Review window ended' : `Review window ends in ${formatDuration(at - now)}`}
+                        </span>
+                      )
+                    })()}
                     {role === 'contractor' && status === 'APPROVED' && (
                       <button
                         type="button"
@@ -190,6 +223,12 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
                       >
                         {working && <Loader2 className="size-3.5 animate-spin" />}
                         Claim Payout
+                      </button>
+                    )}
+                    {status === 'RELEASED' && (
+                      <button type="button" className={btnGhost} onClick={() => openInvoice(escrow, index)}>
+                        <Receipt className="mr-1.5 size-3.5" />
+                        Invoice / Receipt
                       </button>
                     )}
                     <button type="button" className={btnGhost} onClick={() => onViewDetails(role)(escrow, index)}>

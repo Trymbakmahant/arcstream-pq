@@ -8,6 +8,7 @@ import { TaskDetailsDrawer, type DetailsTarget } from '@/components/TaskDetailsD
 import { TxProvider } from '@/components/TxProvider'
 import { CreateEscrowModal } from '@/components/dashboard/CreateEscrowModal'
 import { EscrowsPanel } from '@/components/dashboard/EscrowsPanel'
+import { InvoiceProvider } from '@/components/dashboard/InvoiceProvider'
 import { FundModal } from '@/components/dashboard/FundModal'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { StatCards } from '@/components/dashboard/StatCards'
@@ -115,7 +116,9 @@ export default function Dashboard() {
   useDocumentTitle('Dashboard | ArcStream-PQ')
   return (
     <TxProvider>
-      <DashboardContent />
+      <InvoiceProvider>
+        <DashboardContent />
+      </InvoiceProvider>
     </TxProvider>
   )
 }

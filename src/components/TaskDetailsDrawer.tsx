@@ -1,6 +1,9 @@
+import { useInvoice } from '@/components/dashboard/invoiceContext'
+import { useNow } from '@/hooks/useNow'
+import { claimableAt, formatDuration } from '@/lib/inspection'
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ExternalLink, Loader2, X } from 'lucide-react'
+import { ExternalLink, Loader2, Receipt, X } from 'lucide-react'
 import { addressUrl } from '@/contracts/vault'
 import { milestoneStatus, type EscrowView } from '@/hooks/useEscrows'
 import { useSubmissionTime } from '@/hooks/useSubmissionTime'
@@ -10,7 +13,7 @@ import { milestoneTitle } from '@/lib/text'
 import type { EscrowRole } from '@/components/EscrowCard'
 import { RichText } from '@/components/RichText'
 import type { PqAuthRequest } from '@/components/PqAuthModal'
-import { ProofLink, StatusBadge } from '@/components/ui'
+import { ProofViewer, StatusBadge } from '@/components/ui'
 
 export interface DetailsTarget {
   escrowId: bigint
@@ -94,6 +97,10 @@ function DrawerBody({
   const submitted = milestone.isWorkSubmitted && !!milestone.workProofHash
   const submission = useSubmissionTime(escrow.id, target.index, milestone.workProofHash, submitted)
   const counterparty = target.role === 'employer' ? escrow.contractor : escrow.employer
+  const now = useNow()
+  const { openInvoice } = useInvoice()
+  const claimAt = claimableAt(escrow, milestone)
+  const windowOver = claimAt !== null && claimAt <= now
 
   const run = async (fn: () => Promise<boolean>) => {
     setBusy(true)
@@ -144,7 +151,7 @@ function DrawerBody({
           <h3 className="label-caps text-brandHighlight/70">Work proof</h3>
           {submitted ? (
             <div className="mt-2 space-y-2 rounded-2xl border border-brandSecondary bg-brandSecondary/25 p-4">
-              <ProofLink proof={milestone.workProofHash} />
+              <ProofViewer proof={milestone.workProofHash} />
               <p className="text-xs tabular-nums text-brandHighlight/80">
                 {submission.isLoading
                   ? 'Looking up submission time...'
@@ -161,6 +168,28 @@ function DrawerBody({
             </p>
           )}
         </section>
+
+        {claimAt !== null && (
+          <section>
+            <h3 className="label-caps text-brandHighlight/70">Review window</h3>
+            <div className="mt-2 rounded-2xl border border-brandSecondary bg-white p-4 text-sm text-brandHighlight">
+              <p className="font-semibold tabular-nums">
+                {windowOver ? 'The review window has ended.' : `Ends in ${formatDuration(claimAt - now)}`}
+                <span className="font-normal text-brandHighlight/70">
+                  {' '}
+                  ({new Date(claimAt * 1000).toLocaleString()})
+                </span>
+              </p>
+              <p className="mt-1 text-xs text-brandHighlight/80">
+                {target.role === 'employer'
+                  ? 'Approve before the window ends. Afterwards the contractor can claim this milestone without your approval.'
+                  : windowOver
+                    ? 'The employer did not approve in time, so you can claim this milestone now.'
+                    : 'If the employer does not approve before the window ends, you can claim this milestone yourself. Updating your proof restarts the window.'}
+              </p>
+            </div>
+          </section>
+        )}
 
         <p className="text-xs text-brandHighlight/70">
           {target.role === 'employer' ? 'Contractor' : 'Employer'}{' '}
@@ -204,6 +233,19 @@ function DrawerBody({
             Release Payout
           </button>
         )}
+        {target.role === 'contractor' && status === 'WORK SUBMITTED' && windowOver && (
+          <button
+            type="button"
+            className="btn-primary flex-1"
+            disabled={busy}
+            onClick={() => {
+              void run(() => actions.claimUncontested(escrow.id, target.index))
+            }}
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            Claim Payout
+          </button>
+        )}
         {target.role === 'contractor' && (status === 'PENDING' || status === 'WORK SUBMITTED') && (
           <button type="button" className="btn-ghost flex-1" onClick={() => onSubmitWork(escrow, target.index)}>
             {status === 'PENDING' ? 'Submit Work' : 'Update Proof'}
@@ -220,6 +262,12 @@ function DrawerBody({
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
             Claim Payout
+          </button>
+        )}
+        {status === 'RELEASED' && (
+          <button type="button" className="btn-primary flex-1" onClick={() => openInvoice(escrow, target.index)}>
+            <Receipt className="size-4" />
+            Download Invoice / Receipt
           </button>
         )}
         <button type="button" className="btn-ghost" onClick={onClose}>

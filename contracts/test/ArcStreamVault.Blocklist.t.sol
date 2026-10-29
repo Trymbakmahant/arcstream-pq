@@ -46,7 +46,7 @@ contract ArcStreamVaultBlocklistTest is Test {
         d[1] = "b";
         d[2] = "c";
         vm.prank(employer);
-        id = vault.createEscrow(contractor, a, d, "");
+        id = vault.createEscrow(contractor, a, d, "", 0);
 
         vm.prank(employer);
         vault.mutualCancel(id, C_SHARE, E_SHARE);
@@ -126,7 +126,7 @@ contract ArcStreamVaultBlocklistTest is Test {
         string[] memory d = new string[](1);
         d[0] = "x";
         vm.prank(employer);
-        uint256 id2 = vault.createEscrow(contractor, a, d, "");
+        uint256 id2 = vault.createEscrow(contractor, a, d, "", 0);
         token.setBlocked(contractor, true);
         uint256 before_ = token.balanceOf(employer);
         vm.prank(employer);
@@ -144,7 +144,7 @@ contract ArcStreamVaultBlocklistTest is Test {
         d[0] = "x";
         d[1] = "y";
         vm.prank(employer);
-        pid = vault.createEscrow(contractor, a, d, pqKey);
+        pid = vault.createEscrow(contractor, a, d, pqKey, 0);
     }
 
     function test_Blocklist_ProtectedReleaseRollsBackWhenContractorBlocked_ThenSucceedsOnUnblock() public {

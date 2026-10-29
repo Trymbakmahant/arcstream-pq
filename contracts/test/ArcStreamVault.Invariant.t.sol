@@ -6,7 +6,7 @@ import {ArcStreamVault} from "../ArcStreamVault.sol";
 import {MockERC20} from "../test-helpers/MockERC20.sol";
 import {MockArcPQ} from "../test-helpers/MockArcPQ.sol";
 
-/// Bounded-action handler: random sequences of create / submit / approve / release / refund /
+/// Bounded-action handler (incl. warp + claimUncontested): random sequences of create / submit / approve / release / refund /
 /// rotate / donate / mutualCancel (both parties) / claimSettlement / cancelProposal across
 /// several employers and contractors.
 contract VaultHandler is Test {
@@ -32,6 +32,17 @@ contract VaultHandler is Test {
     uint256 public pqRefunds;
     /// Employer actions on protected escrows with a missing/wrong proof that nevertheless succeeded.
     uint256 public badProofSuccesses;
+
+    /// Uncontested-claim ghosts.
+    uint256 public warps;
+    uint256 public uncontestedClaims;
+    uint256 public uncontestedClaimedAmount;
+    /// Successful claims that should have been impossible (early / unsubmitted / terminated).
+    uint256 public badClaimSuccesses;
+    /// Successful claims by a caller other than the current contractor.
+    uint256 public wrongCallerClaimSuccesses;
+    /// Claims whose deadline had passed but that nevertheless reverted (liveness violation).
+    uint256 public livenessFailures;
 
     uint256 internal constant SIG_LEN = 7856;
 
@@ -64,27 +75,33 @@ contract VaultHandler is Test {
         _create(eSeed, cSeed, nSeed, amtSeed, true);
     }
 
-    function _create(uint256 eSeed, uint256 cSeed, uint256 nSeed, uint256 amtSeed, bool protectedEscrow)
+    function _arrays(uint256 nSeed, uint256 amtSeed)
         internal
-        returns (uint256 id)
+        pure
+        returns (uint256[] memory a, string[] memory d, uint256 total)
     {
-        address e = employers[eSeed % 3];
-        address c = wallets[cSeed % 6];
         uint256 n = bound(nSeed, 1, 8);
-        uint256[] memory a = new uint256[](n);
-        string[] memory d = new string[](n);
-        uint256 total;
+        a = new uint256[](n);
+        d = new string[](n);
         for (uint256 i; i < n; ++i) {
             a[i] = bound(uint256(keccak256(abi.encode(amtSeed, i))), 1, 1_000_000e6);
             d[i] = "m";
             total += a[i];
         }
+    }
+
+    function _create(uint256 eSeed, uint256 cSeed, uint256 nSeed, uint256 amtSeed, bool protectedEscrow)
+        internal
+        returns (uint256 id)
+    {
+        (uint256[] memory a, string[] memory d, uint256 total) = _arrays(nSeed, amtSeed);
+        address e = employers[eSeed % 3];
         usdc.mint(e, total);
         bytes memory key;
         if (protectedEscrow) key = _key(creates % 3);
         vm.startPrank(e);
         usdc.approve(address(vault), total);
-        id = vault.createEscrow(c, a, d, key);
+        id = vault.createEscrow(wallets[cSeed % 6], a, d, key, _period(amtSeed));
         vm.stopPrank();
         creates++;
         if (protectedEscrow) {
@@ -124,6 +141,15 @@ contract VaultHandler is Test {
                 pqReleases++;
             }
         }
+    }
+
+    /// Mix of default (0), min, max and arbitrary in-range inspection periods.
+    function _period(uint256 seed) internal pure returns (uint256) {
+        uint256 k = uint256(keccak256(abi.encode(seed, "period-kind"))) % 4;
+        if (k == 0) return 0;
+        if (k == 1) return 1 days;
+        if (k == 2) return 30 days;
+        return 1 days + (uint256(keccak256(abi.encode(seed, "period-val"))) % (29 days + 1));
     }
 
     function _key(uint256 i) internal pure returns (bytes memory) {
@@ -314,6 +340,77 @@ contract VaultHandler is Test {
         } catch {}
     }
 
+
+    // ------------------------------------------------------------ inspection window actions
+    /// Advance time by up to ~40 days so inspection windows actually elapse.
+    function warp(uint256 secs) external {
+        skip(bound(secs, 1, 40 days));
+        warps++;
+    }
+
+    /// Contractor claims a milestone; checks the timing/state preconditions independently.
+    function claimUncontested(uint256 idSeed, uint256 mSeed) external {
+        uint256 id = _pickId(idSeed);
+        if (id == 0) return;
+        _tryClaim(id, bound(mSeed, 0, (vault.getEscrow(id).milestoneCount < 3 ? vault.getEscrow(id).milestoneCount : 3) - 1));
+    }
+
+    function _tryClaim(uint256 id, uint256 m) internal {
+        ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
+        uint256 deadline = vault.uncontestedClaimTime(id, m);
+        uint256 amount = vault.getMilestone(id, m).amount;
+        bool eligible = deadline != 0 && block.timestamp >= deadline && !e.isTerminated;
+        vm.prank(e.contractor);
+        try vault.claimUncontestedMilestone(id, m) {
+            uncontestedClaims++;
+            uncontestedClaimedAmount += amount;
+            if (!eligible) badClaimSuccesses++;
+        } catch {
+            if (eligible) livenessFailures++;
+        }
+    }
+
+    /// Submit (optionally approve), wait exactly until / just before the deadline, then claim.
+    function submitWarpClaim(uint256 idSeed, uint256 mSeed, uint8 mode) external {
+        uint256 id = _pickId(idSeed);
+        if (id == 0) return;
+        ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
+        uint256 m = bound(mSeed, 0, (e.milestoneCount < 3 ? e.milestoneCount : 3) - 1);
+        vm.prank(e.contractor);
+        try vault.submitMilestoneWork(id, m, "proof") {
+            submits++;
+        } catch {
+            return;
+        }
+        if (mode & 1 != 0) {
+            vm.prank(e.employer);
+            try vault.approveMilestone(id, m) {
+                approves++;
+            } catch {}
+        }
+        uint256 deadline = vault.uncontestedClaimTime(id, m);
+        if (mode & 2 != 0) {
+            vm.warp(deadline - 1); // one second early: must not be claimable
+            _tryClaim(id, m);
+        }
+        vm.warp(deadline); // exactly at the deadline: must be claimable (if still active)
+        _tryClaim(id, m);
+    }
+
+    /// Anyone but the current contractor attempts to claim; must never succeed.
+    function badClaimAttempt(uint256 idSeed, uint256 mSeed, uint256 callerSeed) external {
+        uint256 id = _pickId(idSeed);
+        if (id == 0) return;
+        ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
+        uint256 m = bound(mSeed, 0, (e.milestoneCount < 3 ? e.milestoneCount : 3) - 1);
+        address who = callerSeed % 3 == 0 ? e.employer : wallets[callerSeed % 6];
+        if (who == e.contractor) who = e.employer;
+        vm.prank(who);
+        try vault.claimUncontestedMilestone(id, m) {
+            wrongCallerClaimSuccesses++;
+        } catch {}
+    }
+
     /// Unassigned donations must only ever increase the vault's surplus.
     function donate(uint256 amount) external {
         amount = bound(amount, 0, 1_000e6);
@@ -437,5 +534,63 @@ contract ArcStreamVaultInvariantTest is Test {
             assertEq(vault.submittedUnapprovedCount(id), submittedUnapproved);
             if (!vault.isSettled(id)) assertEq(vault.approvedPending(id), pending);
         }
+    }
+
+    /// No claim ever succeeded early, on unsubmitted work, or on a terminated escrow;
+    /// no non-contractor ever claimed; eligible claims never failed.
+    function invariant_ClaimsOnlyWhenEligible() public view {
+        assertEq(handler.badClaimSuccesses(), 0);
+        assertEq(handler.wrongCallerClaimSuccesses(), 0);
+        assertEq(handler.livenessFailures(), 0);
+    }
+
+    /// Everything paid via uncontested claims is reflected in totalReleased.
+    function invariant_UncontestedClaimsWithinTotalReleased() public view {
+        uint256 released;
+        uint256 count = vault.escrowCount();
+        for (uint256 id = 1; id <= count; ++id) {
+            released += vault.getEscrow(id).totalReleased;
+        }
+        assertLe(handler.uncontestedClaimedAmount(), released);
+    }
+
+    /// Period bounds, submittedAt history and uncontestedClaimTime stay coherent.
+    function invariant_InspectionWindowCoherent() public view {
+        uint256 count = vault.escrowCount();
+        for (uint256 id = 1; id <= count; ++id) {
+            ArcStreamVault.EscrowAgreement memory e = vault.getEscrow(id);
+            assertGe(e.inspectionPeriod, 1 days);
+            assertLe(e.inspectionPeriod, 30 days);
+            ArcStreamVault.Milestone[] memory ms = vault.getMilestones(id);
+            for (uint256 i; i < ms.length; ++i) {
+                uint256 t = vault.uncontestedClaimTime(id, i);
+                if (!ms[i].isWorkSubmitted) {
+                    assertEq(ms[i].submittedAt, 0);
+                    assertEq(t, 0);
+                } else {
+                    assertGt(ms[i].submittedAt, 0);
+                    assertLe(ms[i].submittedAt, block.timestamp);
+                    assertEq(t, ms[i].isReleased ? 0 : ms[i].submittedAt + e.inspectionPeriod);
+                }
+            }
+        }
+    }
+
+    /// Non-vacuity: the handler's submit + warp + claim path really pays out, in every mode.
+    function test_Handler_SubmitWarpClaimPathIsReachable() public {
+        handler.create(0, 0, 3, 11);
+        handler.submitWarpClaim(1, 0, 0); // unapproved branch, claim at deadline
+        assertEq(handler.uncontestedClaims(), 1);
+        handler.submitWarpClaim(1, 1, 1); // approved branch
+        assertEq(handler.uncontestedClaims(), 2);
+        handler.submitWarpClaim(1, 2, 3); // approved + one-second-early attempt first
+        assertEq(handler.uncontestedClaims(), 3);
+        assertEq(handler.badClaimSuccesses(), 0);
+        assertEq(handler.livenessFailures(), 0);
+        assertGt(handler.uncontestedClaimedAmount(), 0);
+        handler.badClaimAttempt(1, 0, 0);
+        assertEq(handler.wrongCallerClaimSuccesses(), 0);
+        handler.warp(5 days);
+        assertEq(handler.warps(), 1);
     }
 }

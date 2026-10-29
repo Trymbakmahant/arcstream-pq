@@ -6,6 +6,7 @@ import { Eye, Fingerprint, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ARC_CHAIN_ID } from '@/config'
 import { VAULT_ADDRESS } from '@/contracts/vault'
+import { DAY_SECONDS, DEFAULT_REVIEW_DAYS, REVIEW_WINDOW_DAYS } from '@/lib/inspection'
 import { NETWORK } from '@/lib/network'
 import { useUsdcBalance } from '@/hooks/useUsdc'
 import { useVaultActions } from '@/hooks/useVaultActions'
@@ -29,13 +30,23 @@ interface Row {
 let rowKey = 0
 const newRow = (): Row => ({ key: rowKey++, amount: '', description: '', mode: 'write' })
 
-export function CreateEscrowCard({ onCreated, onFund }: { onCreated?: () => void; onFund?: () => void }) {
+export function CreateEscrowCard({
+  onCreated,
+  onFund,
+  embedded = false,
+}: {
+  onCreated?: () => void
+  onFund?: () => void
+  /** Inside a modal that already has a title and its own frame. */
+  embedded?: boolean
+}) {
   const { address, isConnected, chainId } = useAccount()
   const { switchChain } = useSwitchChain()
   const { data: balance } = useUsdcBalance()
   const { createEscrow } = useVaultActions()
   const passkey = usePasskey()
   const [useBiometric, setUseBiometric] = useState(true)
+  const [reviewDays, setReviewDays] = useState<number>(DEFAULT_REVIEW_DAYS)
 
   const [contractor, setContractor] = useState('')
   const [rows, setRows] = useState<Row[]>(() => [newRow(), newRow()])
@@ -97,6 +108,7 @@ export function CreateEscrowCard({ onCreated, onFund }: { onCreated?: () => void
         parsedAmounts.map((a) => a ?? 0n),
         rows.map((r) => r.description.trim()),
         pqPublicKey,
+        reviewDays * DAY_SECONDS,
       )
       if (ok) {
         setContractor('')
@@ -109,9 +121,9 @@ export function CreateEscrowCard({ onCreated, onFund }: { onCreated?: () => void
   }
 
   return (
-    <section className="rounded-2xl border border-brandSecondary bg-brandSecondary/20 p-6">
-      <h2 className="display text-xl font-bold text-brandHighlight">Create Escrow</h2>
-      <p className="mt-1 text-sm text-brandHighlight/80">
+    <section className={embedded ? 'p-6' : 'rounded-2xl border border-brandSecondary bg-brandSecondary/20 p-6'}>
+      {!embedded && <h2 className="display text-xl font-bold text-brandHighlight">Create Escrow</h2>}
+      <p className="text-sm text-brandHighlight/80">
         Lock USDC up front. The contractor is paid per milestone once you approve their work.
       </p>
 
@@ -290,6 +302,31 @@ export function CreateEscrowCard({ onCreated, onFund }: { onCreated?: () => void
             </p>
           </div>
         )}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-brandSecondary bg-brandSecondary/15 p-4">
+        <label htmlFor="review-window" className="text-sm font-semibold text-brandHighlight">
+          Review window
+        </label>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <select
+            id="review-window"
+            className="field w-auto min-w-36"
+            value={reviewDays}
+            onChange={(e) => setReviewDays(Number(e.target.value))}
+          >
+            {REVIEW_WINDOW_DAYS.map((d) => (
+              <option key={d} value={d}>
+                {d} {d === 1 ? 'day' : 'days'}
+                {d === DEFAULT_REVIEW_DAYS ? ' (default)' : ''}
+              </option>
+            ))}
+          </select>
+          <p className="min-w-0 flex-1 text-xs text-brandHighlight/80">
+            After the contractor submits proof, you have this long to approve it. If you do nothing, the
+            contractor can claim that milestone&apos;s payout once the window ends.
+          </p>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-brandHighlight/15 pt-5">

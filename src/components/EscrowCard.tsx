@@ -1,5 +1,8 @@
+import { useInvoice } from '@/components/dashboard/invoiceContext'
+import { useNow } from '@/hooks/useNow'
+import { claimableAt, formatDuration } from '@/lib/inspection'
 import { useState } from 'react'
-import { Loader2, ExternalLink, Fingerprint, Info } from 'lucide-react'
+import { Loader2, ExternalLink, Fingerprint, Info, Receipt } from 'lucide-react'
 import { addressUrl } from '@/contracts/vault'
 import { milestoneStatus, type EscrowView } from '@/hooks/useEscrows'
 import { useVaultActions } from '@/hooks/useVaultActions'
@@ -7,7 +10,7 @@ import { fmtUsdc, shortAddress } from '@/lib/money'
 import { milestoneTitle } from '@/lib/text'
 import { fingerprint as shortHash } from '@/lib/pq'
 import type { PqAuthRequest } from '@/components/PqAuthModal'
-import { ProgressBar, ProofLink, StatusBadge } from '@/components/ui'
+import { ProgressBar, ProofViewer, StatusBadge } from '@/components/ui'
 
 export type EscrowRole = 'employer' | 'contractor'
 
@@ -22,6 +25,8 @@ interface Props {
 export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth }: Props) {
   const actions = useVaultActions()
   const [busy, setBusy] = useState<string | null>(null)
+  const now = useNow()
+  const { openInvoice } = useInvoice()
 
   const run = async (key: string, fn: () => Promise<boolean>) => {
     setBusy(key)
@@ -126,7 +131,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
                 <div className="mt-3 rounded-xl bg-brandSecondary/25 p-3">
                   <p className="label-caps text-brandHighlight/70">Work proof</p>
                   <div className="mt-1">
-                    <ProofLink proof={m.workProofHash} />
+                    <ProofViewer proof={m.workProofHash} compact />
                   </div>
                 </div>
               )}
@@ -194,6 +199,31 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
                       Update Proof
                     </button>
                   </>
+                )}
+                {role === 'contractor' && status === 'WORK SUBMITTED' && claimableAt(escrow, m) !== null && (
+                  (claimableAt(escrow, m) ?? 0) <= now ? (
+                    <button
+                      type="button"
+                      className="btn-primary w-full sm:w-auto sm:min-w-48"
+                      disabled={busy !== null}
+                      onClick={() => {
+                        void run(key, () => actions.claimUncontested(escrow.id, index))
+                      }}
+                    >
+                      {busy === key && <Loader2 className="size-4 animate-spin" />}
+                      Claim Payout
+                    </button>
+                  ) : (
+                    <span className="text-xs font-medium text-brandHighlight/70">
+                      Claimable in {formatDuration((claimableAt(escrow, m) ?? 0) - now)}
+                    </span>
+                  )
+                )}
+                {status === 'RELEASED' && (
+                  <button type="button" className="btn-ghost w-full sm:w-auto" onClick={() => openInvoice(escrow, index)}>
+                    <Receipt className="size-4" />
+                    Invoice / Receipt
+                  </button>
                 )}
                 {role === 'contractor' && status === 'APPROVED' && (
                   <button

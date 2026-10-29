@@ -108,7 +108,7 @@ contract ArcStreamVaultRefundTest is ArcStreamVaultTestBase {
         a[0] = 5e6;
         string[] memory d = _descs(1);
         vm.prank(employer);
-        uint256 id = vault.createEscrow(contractor, a, d, "");
+        uint256 id = vault.createEscrow(contractor, a, d, "", 0);
         _approve(id, 0);
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.NothingToRefund.selector);

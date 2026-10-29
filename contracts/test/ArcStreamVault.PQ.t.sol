@@ -44,7 +44,7 @@ contract ArcStreamVaultPQTest is ArcStreamVaultPQBase {
         for (uint256 i; i < lens.length; ++i) {
             vm.prank(employer);
             vm.expectRevert(ArcStreamVault.InvalidPQPublicKey.selector);
-            vault.createEscrow(contractor, a, d, new bytes(lens[i]));
+            vault.createEscrow(contractor, a, d, new bytes(lens[i]), 0);
         }
         assertEq(vault.escrowCount(), 0);
     }
@@ -55,7 +55,7 @@ contract ArcStreamVaultPQTest is ArcStreamVaultPQBase {
         a[0] = UNIT;
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.PQPrecompileUnavailable.selector);
-        vault.createEscrow(contractor, a, _descs(1), pqKey);
+        vault.createEscrow(contractor, a, _descs(1), pqKey, 0);
         assertEq(vault.escrowCount(), 0);
         assertEq(usdc.balanceOf(address(vault)), 0);
     }
@@ -73,7 +73,7 @@ contract ArcStreamVaultPQTest is ArcStreamVaultPQBase {
         a[0] = UNIT;
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.InvalidPQPublicKey.selector);
-        vault.createEscrow(contractor, a, _descs(1), new bytes(31));
+        vault.createEscrow(contractor, a, _descs(1), new bytes(31), 0);
     }
 
     function test_RevertWhen_PrecompileSucceedsWithEmptyReturndataAtCreation() public {
@@ -82,7 +82,7 @@ contract ArcStreamVaultPQTest is ArcStreamVaultPQBase {
         a[0] = UNIT;
         vm.prank(employer);
         vm.expectRevert(ArcStreamVault.PQPrecompileUnavailable.selector);
-        vault.createEscrow(contractor, a, _descs(1), pqKey);
+        vault.createEscrow(contractor, a, _descs(1), pqKey, 0);
     }
 
     function test_CreateProtectedWorksWhenProbeReverts() public {

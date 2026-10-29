@@ -21,6 +21,7 @@ export function useVaultActions() {
     amounts: bigint[],
     descriptions: string[],
     pqPublicKey: Hex = '0x',
+    inspectionPeriod = 0,
   ) => {
     const vault = requireVault()
     const total = amounts.reduce((sum, a) => sum + a, 0n)
@@ -54,7 +55,7 @@ export function useVaultActions() {
             address: vault,
             abi: arcStreamVaultAbi,
             functionName: 'createEscrow',
-            args: [contractor, amounts, descriptions, pqPublicKey],
+            args: [contractor, amounts, descriptions, pqPublicKey, BigInt(inspectionPeriod)],
           }),
       },
     ])
@@ -133,6 +134,22 @@ export function useVaultActions() {
       },
     ])
 
+  /** Contractor claims an unapproved milestone after the employer's review window has passed. */
+  const claimUncontested = (escrowId: bigint, index: number) =>
+    runFlow('Claim payout after review window', [
+      {
+        label: `Claim milestone ${index + 1}`,
+        send: () =>
+          writeContractAsync({
+            chainId: ARC_CHAIN_ID,
+            address: requireVault(),
+            abi: arcStreamVaultAbi,
+            functionName: 'claimUncontestedMilestone',
+            args: [escrowId, BigInt(index)],
+          }),
+      },
+    ])
+
   const refundRemaining = (escrowId: bigint, pqProof: Hex = '0x') =>
     runFlow('Refund unapproved milestones', [
       {
@@ -148,5 +165,13 @@ export function useVaultActions() {
       },
     ])
 
-  return { createEscrow, approveMilestone, releaseMilestone, approveAndRelease, submitWork, refundRemaining }
+  return {
+    createEscrow,
+    approveMilestone,
+    releaseMilestone,
+    approveAndRelease,
+    submitWork,
+    claimUncontested,
+    refundRemaining,
+  }
 }
