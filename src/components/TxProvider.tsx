@@ -132,16 +132,15 @@ export function TxProvider({ children }: { children: ReactNode }) {
                   </div>
                   <h2 className="display mt-1.5 text-xl font-bold text-white tracking-tight">{flow.title}</h2>
                 </div>
-                {flow.finished && (
-                  <button
-                    type="button"
-                    onClick={() => setFlow(null)}
-                    className="neu-card flex size-10 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
-                    aria-label="Close"
-                  >
-                    <X className="size-5" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setFlow(null)}
+                  className="neu-card flex size-10 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
+                  aria-label="Close"
+                  title="Close modal"
+                >
+                  <X className="size-5" />
+                </button>
               </div>
 
               <ol className="mt-5 space-y-3">

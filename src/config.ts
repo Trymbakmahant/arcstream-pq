@@ -33,8 +33,9 @@ export const config = createConfig({
     [arc.id]: fallback([
       mainnetHttp,
       http(NETWORKS.mainnet.rpcUrl),
-      http('https://rpc.drpc.arc.io'),
-      http('https://rpc.quicknode.arc.io'),
+      http('https://rpc.blockdaemon.mainnet.arc.io'),
+      http('https://rpc.drpc.mainnet.arc.io'),
+      http('https://rpc.quicknode.mainnet.arc.io'),
     ]),
   },
 })

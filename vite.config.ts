@@ -46,7 +46,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/rpc-testnet/, ''),
       },
       '/rpc-mainnet': {
-        target: 'https://rpc.arc.io',
+        target: 'https://rpc.mainnet.arc.io',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/rpc-mainnet/, ''),
       },
