@@ -61,11 +61,11 @@ function parse(text: string): Block[] {
 export function RichText({ text, className = '' }: { text: string; className?: string }) {
   const blocks = parse(text)
   return (
-    <div className={`space-y-3 text-sm leading-relaxed text-brandHighlight ${className}`}>
+    <div className={`space-y-3 text-sm leading-relaxed text-zinc-300 ${className}`}>
       {blocks.map((block, i) => {
         if (block.kind === 'ul') {
           return (
-            <ul key={i} className="list-disc space-y-1 pl-5 marker:text-brandHighlight">
+            <ul key={i} className="list-disc space-y-1 pl-5 marker:text-neonLime">
               {block.items.map((item, j) => (
                 <li key={j}>{inline(item)}</li>
               ))}
@@ -74,7 +74,7 @@ export function RichText({ text, className = '' }: { text: string; className?: s
         }
         if (block.kind === 'ol') {
           return (
-            <ol key={i} className="list-decimal space-y-1 pl-5 marker:font-semibold marker:text-brandHighlight">
+            <ol key={i} className="list-decimal space-y-1 pl-5 marker:font-semibold marker:text-neonLime">
               {block.items.map((item, j) => (
                 <li key={j}>{inline(item)}</li>
               ))}
