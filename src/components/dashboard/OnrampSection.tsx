@@ -31,7 +31,7 @@ export function OnrampSection({ onDone }: { onDone: () => void }) {
 
 function HostedOnramp() {
   return (
-    <section className="neu-sunken mt-4 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+    <section className="neu-sunken mt-4 rounded-2xl border border-white/5 p-4">
       <h3 className="flex items-center gap-2 font-semibold text-white">
         <CreditCard className="size-4 text-neonPink" />
         Buy USDC with a card or Apple Pay
@@ -122,7 +122,7 @@ function SandboxOnramp({ onDone }: { onDone: () => void }) {
   }, [session, onDone, fail])
 
   return (
-    <section className="neu-sunken mt-4 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+    <section className="neu-sunken mt-4 rounded-2xl border border-white/5 p-4">
       <h3 className="flex items-center gap-2 font-semibold text-white">
         <CreditCard className="size-4 text-neonPink" />
         Buy USDC with a card or Apple Pay (sandbox)

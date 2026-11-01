@@ -137,14 +137,14 @@ export function CreateEscrowCard({
         <div className="mb-4">
           <h2 className="display text-xl font-bold text-white">Create Escrow</h2>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-            <span className="neu-sunken inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-[#0b0b0b] px-2.5 py-0.5 font-medium text-zinc-300 font-mono">
+            <span className="neu-sunken inline-flex items-center gap-1.5 rounded-full border border-white/5 px-2.5 py-0.5 font-medium text-zinc-300 font-mono">
               <span className={`size-2 rounded-full ${NETWORK.isMainnet ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-neonLime shadow-[0_0_8px_#d4ff3f]'}`} />
               {NETWORK.label}
             </span>
-            <span className="neu-sunken rounded-md border border-white/5 bg-[#0b0b0b] px-2 py-0.5 font-mono text-[11px] text-zinc-400">
+            <span className="neu-sunken rounded-md border border-white/5 px-2 py-0.5 font-mono text-[11px] text-zinc-400">
               Network ID: <strong className="text-white">{NETWORK.chainId}</strong>
             </span>
-            <span className="neu-sunken rounded-md border border-white/5 bg-[#0b0b0b] px-2 py-0.5 font-mono text-[11px] text-zinc-400" title={NETWORK.rpcUrl}>
+            <span className="neu-sunken rounded-md border border-white/5 px-2 py-0.5 font-mono text-[11px] text-zinc-400" title={NETWORK.rpcUrl}>
               RPC: <strong className="text-white">{NETWORK.rpcUrl.replace('https://', '')}</strong>
             </span>
           </div>
@@ -194,7 +194,7 @@ export function CreateEscrowCard({
 
       <ul className="mt-2 space-y-4">
         {rows.map((row, index) => (
-          <li key={row.key} className="neu-sunken rounded-2xl border border-white/5 bg-[#0b0b0b] p-4">
+          <li key={row.key} className="neu-sunken rounded-2xl border border-white/5 p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="neu-card flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-neonLime/30 text-sm font-semibold text-neonLime">
@@ -234,7 +234,7 @@ export function CreateEscrowCard({
             <div
               role="tablist"
               aria-label={`Milestone ${index + 1} description mode`}
-              className="neu-card mb-2 inline-flex rounded-lg border border-white/5 bg-[#111111] p-0.5"
+              className="neu-card mb-2 inline-flex rounded-lg border border-white/5 p-0.5"
             >
               {(
                 [
@@ -279,7 +279,7 @@ export function CreateEscrowCard({
                 </p>
               </>
             ) : (
-              <div className="neu-sunken min-h-24 rounded-xl border border-white/5 bg-[#0b0b0b] p-3 text-zinc-200">
+              <div className="neu-sunken min-h-24 rounded-xl border border-white/5 p-3 text-zinc-200">
                 {row.description.trim() ? (
                   <RichText text={row.description} />
                 ) : (
@@ -361,7 +361,7 @@ export function CreateEscrowCard({
             onChange={(e) => setReviewDays(Number(e.target.value))}
           >
             {REVIEW_WINDOW_DAYS.map((d) => (
-              <option key={d} value={d} className="bg-[#111111] text-white">
+              <option key={d} value={d} className="bg-[#090c12] text-white">
                 {d} {d === 1 ? 'day' : 'days'}
                 {d === DEFAULT_REVIEW_DAYS ? ' (default)' : ''}
               </option>
@@ -416,7 +416,7 @@ export function CreateEscrowCard({
       </div>
 
       {isConnected && problem && (
-        <div className="neu-sunken mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neonPink/40 bg-[#0b0b0b] p-3 text-sm text-neonPink shadow-glow-pink">
+        <div className="neu-sunken mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neonPink/40 p-3 text-sm text-neonPink shadow-glow-pink">
           <p className="min-w-[200px] flex-1 font-medium">{problem}</p>
           {insufficient && onFund && (
             <button

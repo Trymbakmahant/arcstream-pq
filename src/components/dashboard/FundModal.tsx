@@ -53,7 +53,7 @@ export function FundModal({ open, onClose }: Props) {
           aria-label="Fund with USDC"
         >
           <motion.div
-            className="neu-card relative my-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
+            className="neu-card relative my-4 w-full max-w-lg rounded-3xl border border-white/10 p-6 shadow-2xl"
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             exit={{ y: 20 }}
@@ -63,19 +63,19 @@ export function FundModal({ open, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="neu-card absolute right-3 top-3 flex size-11 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
+              className="neu-card absolute right-4 top-4 flex size-10 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
               aria-label="Close"
             >
               <X className="size-5" />
             </button>
 
             <p className="label-caps text-zinc-500">Fund your wallet</p>
-            <h2 className="display mt-1 text-2xl font-bold text-white">Fund with USDC</h2>
+            <h2 className="display mt-1 text-2xl font-bold text-white tracking-tight">Fund with USDC</h2>
             <p className="mt-2 text-sm text-zinc-400">
               On Arc, USDC is both your balance and your gas, so one balance covers escrow deposits and fees.
             </p>
 
-            <div className="neu-sunken mt-5 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+            <div className="neu-sunken mt-5 rounded-2xl border border-white/5 p-4">
               <p className="label-caps text-zinc-500">Your wallet</p>
               {isConnected && address ? (
                 <>
@@ -132,7 +132,7 @@ export function FundModal({ open, onClose }: Props) {
 
             <OnrampSection onDone={() => void refetch()} />
 
-            <section className="neu-sunken mt-4 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+            <section className="neu-sunken mt-4 rounded-2xl border border-white/5 p-4">
               <h3 className="flex items-center gap-2 font-semibold text-white">
                 <Landmark className="size-4 text-neonPink" />
                 {NETWORK.isMainnet ? 'You are on Arc Mainnet' : 'Arc Mainnet: real USDC'}
