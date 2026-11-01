@@ -71,19 +71,21 @@ createRoot(document.getElementById('root')!).render(
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider
+          mode="dark"
           customTheme={{
             '--ck-font-family': "'DM Sans', sans-serif",
-            '--ck-body-background': '#e8e9df',
-            '--ck-body-color': '#2e3d28',
-            '--ck-primary-button-background': '#a9bb87',
-            '--ck-primary-button-color': '#2e3d28',
-            '--ck-overlay-background': 'rgba(46, 61, 40, 0.8)',
-            '--ck-focus-color': '#a9bb87',
+            '--ck-body-background': '#111111',
+            '--ck-body-color': '#f3f4f6',
+            '--ck-primary-button-background': '#d4ff3f',
+            '--ck-primary-button-color': '#0b0b0b',
+            '--ck-overlay-background': 'rgba(4, 4, 4, 0.85)',
+            '--ck-focus-color': '#d4ff3f',
+            '--ck-border-color': 'rgba(255, 255, 255, 0.08)',
           }}
         >
           <App />
           <StudioWatermark />
-          <Toaster position="top-center" />
+          <Toaster theme="dark" position="top-center" />
         </ConnectKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

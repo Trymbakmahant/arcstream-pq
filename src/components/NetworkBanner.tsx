@@ -25,10 +25,10 @@ export function NetworkBanner() {
   if (!wrongChain) return null
 
   return (
-    <div className="border-b border-brandSecondary bg-brandSecondary/40">
+    <div className="neu-card border-b border-amber-500/30 bg-[#111111]">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <p className="flex items-center gap-2 text-sm font-semibold text-brandHighlight">
-          <Network className="size-4" />
+        <p className="flex items-center gap-2 text-sm font-semibold text-amber-300">
+          <Network className="size-4 text-amber-400" />
           Your wallet is on another network. Switch to {NETWORK.label} to continue.
         </p>
         <button

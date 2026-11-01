@@ -29,14 +29,19 @@ export function useVaultActions() {
       {
         label: 'Approve USDC allowance',
         skipIf: async () => {
-          if (!publicClient || !address) return false
-          const allowance = await publicClient.readContract({
-            address: USDC_ADDRESS,
-            abi: erc20Abi,
-            functionName: 'allowance',
-            args: [address, vault],
-          })
-          return allowance >= total
+          try {
+            if (!publicClient || !address) return false
+            const allowance = await publicClient.readContract({
+              address: USDC_ADDRESS,
+              abi: erc20Abi,
+              functionName: 'allowance',
+              args: [address, vault],
+            })
+            return allowance >= total
+          } catch (err) {
+            console.warn('[useVaultActions] Could not pre-check allowance, proceeding with approval step:', err)
+            return false
+          }
         },
         send: () =>
           writeContractAsync({

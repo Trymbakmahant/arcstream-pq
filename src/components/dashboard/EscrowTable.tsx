@@ -22,34 +22,32 @@ const STATUS_COPY: Record<MilestoneStatus, { employer: string; contractor: strin
   RELEASED: {
     employer: 'Payment Released',
     contractor: 'Payment Received',
-    className: 'bg-brandSecondary/50 text-brandHighlight',
+    className: 'neu-sunken border border-white/5 text-zinc-400',
   },
   APPROVED: {
     employer: 'Approved - Release',
     contractor: 'Approved - Claim',
-    className: 'bg-brandHighlight text-brandMain',
+    className: 'neu-card border border-neonLime/50 text-neonLime shadow-glow-lime font-bold',
   },
   'WORK SUBMITTED': {
     employer: 'Work Submitted - Review',
     contractor: 'Awaiting Approval',
-    className: 'bg-brandHighlight/75 text-brandMain',
+    className: 'neu-card border border-neonPink/50 text-neonPink shadow-glow-pink font-bold',
   },
   PENDING: {
     employer: 'Pending Work',
     contractor: 'Work Due',
-    className: 'border border-brandSecondary bg-white text-brandHighlight',
+    className: 'neu-sunken border border-white/5 text-amber-400',
   },
   CLOSED: {
     employer: 'Closed',
     contractor: 'Closed',
-    className: 'border border-dashed border-brandHighlight/30 text-brandHighlight/60',
+    className: 'neu-sunken border border-dashed border-white/10 text-zinc-600',
   },
 }
 
-const btnPrimary =
-  'inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-brandHighlight px-3.5 text-xs font-semibold text-brandMain transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45'
-const btnGhost =
-  'inline-flex min-h-11 items-center justify-center rounded-xl border border-brandHighlight/15 bg-white px-3.5 text-xs font-semibold text-brandHighlight transition-colors hover:bg-brandSecondary/30'
+const btnPrimary = 'btn-primary text-xs py-2 px-3.5 min-h-10'
+const btnGhost = 'btn-ghost text-xs py-2 px-3.5 min-h-10'
 
 export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Props) {
   const actions = useVaultActions()
@@ -70,7 +68,7 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
     <div className="overflow-x-auto">
       <table className="w-full min-w-[56rem] border-collapse text-left">
         <thead>
-          <tr className="label-caps text-brandHighlight/60">
+          <tr className="label-caps text-zinc-500 border-b border-white/5">
             <th scope="col" className="px-6 py-4 font-semibold">Counterparty / Recipient</th>
             <th scope="col" className="px-4 py-4 font-semibold">Milestone</th>
             <th scope="col" className="px-4 py-4 font-semibold">Payment Amount</th>
@@ -88,13 +86,15 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
             return (
               <tr
                 key={key}
-                className={`border-t border-brandHighlight/10 align-middle ${row.needsAction ? 'bg-brandSecondary/15' : ''}`}
+                className={`border-t border-white/5 align-middle transition-colors hover:bg-white/[0.02] ${row.needsAction ? 'bg-neonLime/[0.04]' : ''}`}
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <span
-                      className={`flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                        role === 'employer' ? 'bg-brandSecondary text-brandHighlight' : 'bg-brandHighlight text-brandMain'
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold font-mono ${
+                        role === 'employer'
+                          ? 'bg-neonLime/20 border border-neonLime/30 text-neonLime'
+                          : 'bg-neonPink/20 border border-neonPink/30 text-neonPink'
                       }`}
                     >
                       {row.counterparty.slice(2, 4).toUpperCase()}
@@ -104,19 +104,19 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
                         href={addressUrl(row.counterparty)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-mono text-sm font-semibold text-brandHighlight hover:underline"
+                        className="inline-flex items-center gap-1 font-mono text-sm font-semibold text-white hover:text-neonLime transition-colors"
                       >
                         {shortAddress(row.counterparty)}
-                        <ExternalLink className="size-3" />
+                        <ExternalLink className="size-3 text-zinc-500" />
                       </a>
-                      <p className="flex flex-wrap items-center gap-1.5 font-mono text-[0.6875rem] text-brandHighlight/60">
+                      <p className="flex flex-wrap items-center gap-1.5 font-mono text-[0.6875rem] text-zinc-400">
                         ESC-{escrow.id.toString()}-M{index + 1}
-                        <span className="rounded bg-brandSecondary/40 px-1.5 py-0.5 font-sans font-semibold text-brandHighlight">
+                        <span className="neu-sunken rounded border border-white/5 px-1.5 py-0.5 font-sans font-semibold text-zinc-300">
                           {role === 'employer' ? 'You fund' : 'You work'}
                         </span>
                         {escrow.isPQProtected && (
                           <span
-                            className="inline-flex items-center gap-0.5 rounded bg-brandHighlight px-1.5 py-0.5 font-sans font-bold text-brandMain"
+                            className="inline-flex items-center gap-0.5 rounded bg-neonPink/20 border border-neonPink/40 px-1.5 py-0.5 font-sans font-bold text-neonPink shadow-glow-pink"
                             title="Employer release and refund need Touch ID / Face ID"
                           >
                             <Fingerprint className="size-3" />
@@ -127,18 +127,18 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-4 text-sm tabular-nums text-brandHighlight">
+                <td className="px-4 py-4 text-sm tabular-nums text-white">
                   <span className="font-semibold">{index + 1}</span>
-                  <span className="text-brandHighlight/60"> of {escrow.milestoneCount}</span>
+                  <span className="text-zinc-500"> of {escrow.milestoneCount}</span>
                 </td>
                 <td className="px-4 py-4">
-                  <p className="font-mono text-base font-semibold tabular-nums text-brandHighlight">
+                  <p className="font-mono text-base font-semibold tabular-nums text-white">
                     ${fmtUsdc(milestone.amount)}
                   </p>
-                  <p className="font-mono text-[0.6875rem] text-brandHighlight/60">USDC</p>
+                  <p className="font-mono text-[0.6875rem] text-zinc-500">USDC</p>
                 </td>
                 <td className="max-w-56 px-4 py-4">
-                  <span className="inline-block max-w-full rounded-lg border border-brandHighlight/10 bg-brandMain px-3 py-2 text-sm text-brandHighlight">
+                  <span className="neu-sunken inline-block max-w-full rounded-lg border border-white/5 bg-[#0b0b0b] px-3 py-2 text-sm text-zinc-300">
                     <span className="line-clamp-2">{milestoneTitle(milestone.description)}</span>
                   </span>
                 </td>
@@ -200,14 +200,14 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
                           Claim Payout
                         </button>
                       ) : (
-                        <span className="text-xs font-medium text-brandHighlight/70">Claimable in {formatDuration(at - now)}</span>
+                        <span className="text-xs font-medium text-zinc-400">Claimable in {formatDuration(at - now)}</span>
                       )
                     })()}
                     {role === 'employer' && status === 'WORK SUBMITTED' && (() => {
                       const at = claimableAt(escrow, milestone)
                       if (at === null) return null
                       return (
-                        <span className="w-full text-right text-[0.6875rem] font-medium text-brandHighlight/70">
+                        <span className="w-full text-right text-[0.6875rem] font-medium text-zinc-400">
                           {at <= now ? 'Review window ended' : `Review window ends in ${formatDuration(at - now)}`}
                         </span>
                       )
@@ -227,7 +227,7 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
                     )}
                     {status === 'RELEASED' && (
                       <button type="button" className={btnGhost} onClick={() => openInvoice(escrow, index)}>
-                        <Receipt className="mr-1.5 size-3.5" />
+                        <Receipt className="mr-1.5 size-3.5 text-neonLime" />
                         Invoice / Receipt
                       </button>
                     )}

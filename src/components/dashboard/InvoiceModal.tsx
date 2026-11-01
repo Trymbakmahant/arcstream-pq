@@ -46,7 +46,7 @@ function InvoiceDialog({ target, onClose }: { target: { escrow: EscrowView; inde
 
   return (
     <motion.div
-      className="invoice-overlay fixed inset-0 z-[9000] flex items-center justify-center bg-brandHighlight/70 p-3 backdrop-blur-sm sm:p-6"
+      className="invoice-overlay fixed inset-0 z-[9000] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -56,19 +56,19 @@ function InvoiceDialog({ target, onClose }: { target: { escrow: EscrowView; inde
       aria-label="Invoice and receipt"
     >
       <motion.div
-        className="invoice-panel flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-brandSecondary bg-brandMain shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
+        className="invoice-panel neu-card flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111111] shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
         initial={{ y: 16, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
         exit={{ y: 16, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 380, damping: 34 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-brandSecondary px-5 py-3">
-          <h2 className="display text-lg font-bold text-brandHighlight">Invoice / Receipt</h2>
+        <div className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5 py-3 bg-[#111111]">
+          <h2 className="display text-lg font-bold text-white">Invoice / Receipt</h2>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="btn-primary min-h-11"
+              className="btn-primary min-h-10 text-xs px-3.5"
               onClick={() => {
                 window.print()
               }}
@@ -79,7 +79,7 @@ function InvoiceDialog({ target, onClose }: { target: { escrow: EscrowView; inde
             <button
               type="button"
               onClick={onClose}
-              className="flex size-11 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
+              className="neu-card flex size-10 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
               aria-label="Close invoice"
             >
               <X className="size-5" />

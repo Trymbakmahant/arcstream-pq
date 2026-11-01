@@ -43,7 +43,7 @@ export function FundModal({ open, onClose }: Props) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[7500] flex items-start justify-center overflow-y-auto bg-brandHighlight/60 p-4 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-[7500] flex items-start justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm sm:items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -53,7 +53,7 @@ export function FundModal({ open, onClose }: Props) {
           aria-label="Fund with USDC"
         >
           <motion.div
-            className="relative my-4 w-full max-w-lg rounded-2xl border border-brandSecondary bg-brandMain p-6 shadow-2xl"
+            className="neu-card relative my-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             exit={{ y: 20 }}
@@ -63,57 +63,57 @@ export function FundModal({ open, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
+              className="neu-card absolute right-3 top-3 flex size-11 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
               aria-label="Close"
             >
               <X className="size-5" />
             </button>
 
-            <p className="label-caps text-brandHighlight/70">Fund your wallet</p>
-            <h2 className="display mt-1 text-2xl font-bold text-brandHighlight">Fund with USDC</h2>
-            <p className="mt-2 text-sm text-brandHighlight/80">
+            <p className="label-caps text-zinc-500">Fund your wallet</p>
+            <h2 className="display mt-1 text-2xl font-bold text-white">Fund with USDC</h2>
+            <p className="mt-2 text-sm text-zinc-400">
               On Arc, USDC is both your balance and your gas, so one balance covers escrow deposits and fees.
             </p>
 
-            <div className="mt-5 rounded-xl border border-brandSecondary bg-white p-4">
-              <p className="label-caps text-brandHighlight/60">Your wallet</p>
+            <div className="neu-sunken mt-5 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+              <p className="label-caps text-zinc-500">Your wallet</p>
               {isConnected && address ? (
                 <>
-                  <p className="mt-1 break-all font-mono text-sm text-brandHighlight">{address}</p>
+                  <p className="mt-1 break-all font-mono text-sm text-white">{address}</p>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm tabular-nums text-brandHighlight">
+                    <p className="text-sm tabular-nums text-zinc-300 font-mono">
                       Balance:{' '}
-                      <strong>{balance !== undefined ? `${fmtUsdc(balance)} USDC` : '...'}</strong>
+                      <strong className="text-neonLime">{balance !== undefined ? `${fmtUsdc(balance)} USDC` : '...'}</strong>
                     </p>
                     <div className="flex gap-2">
-                      <button type="button" className="btn-ghost min-h-11" onClick={() => void copy()}>
-                        <Copy className="size-4" />
+                      <button type="button" className="btn-ghost min-h-10 text-xs px-3" onClick={() => void copy()}>
+                        <Copy className="size-3.5" />
                         Copy address
                       </button>
                       <button
                         type="button"
-                        className="btn-ghost min-h-11"
+                        className="btn-ghost min-h-10 text-xs px-3"
                         onClick={() => void refetch()}
                         disabled={isFetching}
                       >
-                        {isFetching ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                        {isFetching ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
                         Refresh
                       </button>
                     </div>
                   </div>
                 </>
               ) : (
-                <p className="mt-1 text-sm text-brandHighlight/80">Connect a wallet to see your address and balance.</p>
+                <p className="mt-1 text-sm text-zinc-500">Connect a wallet to see your address and balance.</p>
               )}
             </div>
 
             {!NETWORK.isMainnet && (
-            <section className="mt-4 rounded-xl border border-brandSecondary bg-brandSecondary/20 p-4">
-              <h3 className="flex items-center gap-2 font-semibold text-brandHighlight">
-                <Droplets className="size-4" />
+            <section className="neu-card mt-4 rounded-xl border border-neonLime/30 p-4">
+              <h3 className="flex items-center gap-2 font-semibold text-white">
+                <Droplets className="size-4 text-neonLime" />
                 Arc Testnet (chain {ARC_CHAIN_ID}): free test USDC
               </h3>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-brandHighlight/90">
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-zinc-300">
                 <li>Copy your wallet address above.</li>
                 <li>Open the Circle Faucet, choose Arc Testnet and USDC, and paste your address.</li>
                 <li>Come back here and press Refresh. Test USDC has no real value.</li>
@@ -132,12 +132,12 @@ export function FundModal({ open, onClose }: Props) {
 
             <OnrampSection onDone={() => void refetch()} />
 
-            <section className="mt-4 rounded-xl border border-brandHighlight/15 bg-white p-4">
-              <h3 className="flex items-center gap-2 font-semibold text-brandHighlight">
-                <Landmark className="size-4" />
+            <section className="neu-sunken mt-4 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+              <h3 className="flex items-center gap-2 font-semibold text-white">
+                <Landmark className="size-4 text-neonPink" />
                 {NETWORK.isMainnet ? 'You are on Arc Mainnet' : 'Arc Mainnet: real USDC'}
               </h3>
-              <p className="mt-2 text-sm text-brandHighlight/80">
+              <p className="mt-2 text-sm text-zinc-400">
                 {NETWORK.isMainnet
                   ? 'Escrows here use real USDC from your wallet. Transactions involve real funds and cannot be reversed. Switch back to Arc Testnet to practice with free test USDC.'
                   : 'This app is on Arc Testnet. To use real USDC, switch to Arc Mainnet. Mainnet transactions involve real funds and cannot be reversed.'}

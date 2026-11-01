@@ -23,6 +23,7 @@ interface FlowState {
   title: string
   steps: StepState[]
   error?: string
+  rawError?: string
   finished: boolean
 }
 
@@ -70,13 +71,22 @@ export function TxProvider({ children }: { children: ReactNode }) {
         setFlow({ title, steps: states.map((s) => ({ ...s })), finished: true })
         return true
       } catch (error) {
+        console.error('🚨 [ArcStream Tx Error]:', error)
+        if (error instanceof Error) {
+          console.error('🚨 Error Message:', error.message)
+          if ('cause' in error && error.cause) {
+            console.error('🚨 Error Cause:', error.cause)
+          }
+        }
         if (isUserRejection(error)) {
           setFlow(null)
           toast('Transaction cancelled.')
           return false
         }
-        update(activeIndex, { status: 'error' }, parseOnchainError(error))
-        setFlow((current) => (current ? { ...current, finished: true } : current))
+        const parsed = parseOnchainError(error)
+        const rawMsg = error instanceof Error ? error.message : String(error)
+        update(activeIndex, { status: 'error' }, parsed)
+        setFlow((current) => (current ? { ...current, error: parsed, rawError: rawMsg, finished: true } : current))
         return false
       }
     },
@@ -94,7 +104,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
       <AnimatePresence>
         {flow && (
           <motion.div
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-brandHighlight/85 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -103,7 +113,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
             aria-label="Transaction progress"
           >
             <motion.div
-              className="w-full max-w-md rounded-2xl border border-brandSecondary bg-brandMain p-6 shadow-2xl"
+              className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
               initial={{ y: 16, scale: 0.98 }}
               animate={{ y: 0, scale: 1 }}
               exit={{ y: 16, scale: 0.98 }}
@@ -111,14 +121,22 @@ export function TxProvider({ children }: { children: ReactNode }) {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="label-caps text-brandHighlight/70">{NETWORK.label}</p>
-                  <h2 className="display mt-1 text-xl font-bold text-brandHighlight">{flow.title}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="label-caps font-semibold text-neonLime">{NETWORK.label}</span>
+                    <span className="neu-sunken rounded border border-white/5 px-1.5 py-0.5 font-mono text-[11px] text-zinc-400">
+                      ID: {NETWORK.chainId}
+                    </span>
+                    <span className="neu-sunken rounded border border-white/5 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400" title={NETWORK.rpcUrl}>
+                      RPC: {NETWORK.rpcUrl.replace('https://', '')}
+                    </span>
+                  </div>
+                  <h2 className="display mt-1.5 text-xl font-bold text-white">{flow.title}</h2>
                 </div>
                 {flow.finished && (
                   <button
                     type="button"
                     onClick={() => setFlow(null)}
-                    className="flex size-11 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
+                    className="neu-card flex size-11 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
                     aria-label="Close"
                   >
                     <X className="size-5" />
@@ -130,19 +148,19 @@ export function TxProvider({ children }: { children: ReactNode }) {
                 {flow.steps.map((step, index) => (
                   <li
                     key={`${step.label}-${index}`}
-                    className="flex items-center gap-3 rounded-2xl border border-brandSecondary/70 bg-brandSecondary/20 p-3"
+                    className="neu-sunken flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0b0b0b] p-3"
                   >
                     <StepIcon status={step.status} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-brandHighlight">{step.label}</p>
-                      <p className="text-xs text-brandHighlight/70">{stepCopy(step.status)}</p>
+                      <p className="text-sm font-semibold text-white">{step.label}</p>
+                      <p className="text-xs text-zinc-400">{stepCopy(step.status)}</p>
                     </div>
                     {step.hash && (
                       <a
                         href={txUrl(step.hash)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-brandHighlight underline underline-offset-2"
+                        className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-neonLime underline underline-offset-2"
                       >
                         Tx <ExternalLink className="size-3" />
                       </a>
@@ -152,10 +170,22 @@ export function TxProvider({ children }: { children: ReactNode }) {
               </ol>
 
               {flow.error && (
-                <p className="mt-4 flex items-start gap-2 rounded-2xl border border-brandHighlight bg-brandMain p-3 text-sm font-medium text-brandHighlight">
-                  <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-                  {flow.error}
-                </p>
+                <div className="neu-sunken mt-4 rounded-2xl border border-neonPink/40 bg-[#0b0b0b] p-3.5 text-sm font-medium text-neonPink shadow-glow-pink">
+                  <p className="flex items-start gap-2">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-neonPink" />
+                    <span>{flow.error}</span>
+                  </p>
+                  {flow.rawError && (
+                    <details className="mt-2.5 border-t border-white/10 pt-2 text-xs">
+                      <summary className="cursor-pointer font-semibold opacity-80 hover:opacity-100 text-zinc-300">
+                        View raw error details (also logged to console)
+                      </summary>
+                      <pre className="neu-sunken mt-2 max-h-40 overflow-auto rounded-lg border border-white/5 bg-black p-2.5 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap select-all text-zinc-300">
+                        {flow.rawError}
+                      </pre>
+                    </details>
+                  )}
+                </div>
               )}
 
               {lastHash && (
@@ -163,7 +193,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
                   href={txUrl(lastHash)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brandHighlight px-4 text-sm font-semibold text-brandMain"
+                  className="btn-primary mt-5 flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
                 >
                   View on {NETWORK.label} Explorer <ExternalLink className="size-4" />
                 </a>
@@ -200,27 +230,27 @@ function stepCopy(status: StepStatus): string {
 }
 
 function StepIcon({ status }: { status: StepStatus }) {
-  const base = 'flex size-8 shrink-0 items-center justify-center rounded-full'
+  const base = 'flex size-8 shrink-0 items-center justify-center rounded-lg'
   if (status === 'wallet' || status === 'confirming') {
     return (
-      <span className={`${base} bg-brandHighlight text-brandMain`}>
+      <span className={`${base} neu-card border border-neonLime/40 text-neonLime shadow-glow-lime`}>
         <Loader2 className="size-4 animate-spin" />
       </span>
     )
   }
   if (status === 'done' || status === 'skipped') {
     return (
-      <span className={`${base} bg-brandSecondary text-brandHighlight`}>
+      <span className={`${base} neu-card border border-neonLime/40 text-neonLime shadow-glow-lime`}>
         <Check className="size-4" />
       </span>
     )
   }
   if (status === 'error') {
     return (
-      <span className={`${base} border border-brandHighlight text-brandHighlight`}>
+      <span className={`${base} neu-card border border-neonPink/40 text-neonPink shadow-glow-pink`}>
         <TriangleAlert className="size-4" />
       </span>
     )
   }
-  return <span className={`${base} border border-brandSecondary`} />
+  return <span className={`${base} neu-sunken border border-white/5 text-zinc-600`} />
 }

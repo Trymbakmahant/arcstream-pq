@@ -47,50 +47,50 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
   const releasedCount = escrow.milestones.filter((m) => m.isReleased).length
 
   return (
-    <article className="rounded-2xl border border-brandSecondary bg-brandSecondary/20 p-6">
+    <article className="neu-card rounded-2xl border border-white/5 p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="label-caps text-brandHighlight/70">Escrow #{escrow.id.toString()}</p>
-          <p className="mt-1 text-sm text-brandHighlight">
+          <p className="label-caps text-zinc-500">Escrow #{escrow.id.toString()}</p>
+          <p className="mt-1 text-sm text-zinc-300">
             {role === 'employer' ? 'Contractor' : 'Employer'}{' '}
             <a
               href={addressUrl(counterparty)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-mono text-xs font-medium underline underline-offset-2"
+              className="inline-flex items-center gap-1 font-mono text-xs font-medium text-white hover:text-neonLime underline underline-offset-2 transition-colors"
             >
               {shortAddress(counterparty)}
-              <ExternalLink className="size-3" />
+              <ExternalLink className="size-3 text-zinc-500" />
             </a>
           </p>
         </div>
         <div className="text-right">
-          <p className="label-caps text-brandHighlight/70">Total escrowed</p>
-          <p className="display text-2xl font-bold tabular-nums text-brandHighlight">
-            {fmtUsdc(escrow.totalDeposited)} <span className="text-sm font-medium">USDC</span>
+          <p className="label-caps text-zinc-500">Total escrowed</p>
+          <p className="display text-2xl font-bold tabular-nums text-white">
+            {fmtUsdc(escrow.totalDeposited)} <span className="text-sm font-medium text-zinc-400">USDC</span>
           </p>
         </div>
       </div>
 
       <div className="mt-4">
         <ProgressBar total={escrow.totalDeposited} released={escrow.totalReleased} approved={approvedPending} />
-        <p className="mt-2 flex flex-wrap justify-between gap-2 text-xs tabular-nums text-brandHighlight/80">
+        <p className="mt-2 flex flex-wrap justify-between gap-2 text-xs tabular-nums text-zinc-400 font-mono">
           <span>
             Paid out {fmtUsdc(escrow.totalReleased)} USDC ({releasedCount}/{escrow.milestoneCount} milestones)
           </span>
-          {approvedPending > 0n && <span>Approved, awaiting payout {fmtUsdc(approvedPending)} USDC</span>}
+          {approvedPending > 0n && <span className="text-neonLime">Approved, awaiting payout {fmtUsdc(approvedPending)} USDC</span>}
         </p>
       </div>
 
       {escrow.isPQProtected && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-brandHighlight bg-brandHighlight px-4 py-3 text-brandMain">
-          <Fingerprint className="size-5 shrink-0 text-brandSecondary" />
+        <div className="neu-sunken mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neonPink/40 bg-[#0b0b0b] px-4 py-3 text-white shadow-glow-pink">
+          <Fingerprint className="size-5 shrink-0 text-neonPink" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold tracking-[0.08em]">PQ-2FA SECURED</p>
-            <p className="text-xs text-brandMain/80">Employer release and refund need Touch ID / Face ID</p>
+            <p className="text-xs font-bold tracking-[0.08em] text-neonPink">PQ-2FA SECURED</p>
+            <p className="text-xs text-zinc-400">Employer release and refund need Touch ID / Face ID</p>
           </div>
           <span
-            className="rounded-full bg-brandSecondary px-3 py-1 font-mono text-xs font-semibold text-brandHighlight"
+            className="neu-card rounded-full border border-neonPink/30 px-3 py-1 font-mono text-xs font-semibold text-neonPink"
             title={escrow.pqCommitment}
           >
             PQ-ID {shortHash(escrow.pqCommitment)}
@@ -99,14 +99,14 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
       )}
 
       {escrow.isSettled && (
-        <p className="mt-4 flex items-start gap-2 rounded-2xl border border-brandSecondary bg-brandMain p-3 text-sm text-brandHighlight">
-          <Info className="mt-0.5 size-4 shrink-0" />
+        <p className="neu-sunken mt-4 flex items-start gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 text-sm text-amber-200">
+          <Info className="mt-0.5 size-4 shrink-0 text-amber-400" />
           This escrow was settled by mutual cancellation. Each party claims their share through the contract.
         </p>
       )}
       {escrow.isTerminated && !escrow.isSettled && (
-        <p className="mt-4 flex items-start gap-2 rounded-2xl border border-brandSecondary bg-brandMain p-3 text-sm text-brandHighlight">
-          <Info className="mt-0.5 size-4 shrink-0" />
+        <p className="neu-sunken mt-4 flex items-start gap-2 rounded-2xl border border-zinc-700 bg-black/40 p-3 text-sm text-zinc-400">
+          <Info className="mt-0.5 size-4 shrink-0 text-zinc-500" />
           This escrow was closed. Unapproved milestones were refunded to the employer. Approved milestones can still be paid out.
         </p>
       )}
@@ -116,20 +116,20 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
           const status = milestoneStatus(escrow, m)
           const key = `${escrow.id}-${index}`
           return (
-            <li key={key} className="rounded-2xl border border-brandSecondary/80 bg-brandMain p-4">
+            <li key={key} className="neu-sunken rounded-2xl border border-white/5 bg-[#0b0b0b] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-brandHighlight">
+                  <p className="text-sm font-semibold text-white">
                     {index + 1}. {milestoneTitle(m.description)}
                   </p>
-                  <p className="mt-0.5 text-sm tabular-nums text-brandHighlight/80">{fmtUsdc(m.amount)} USDC</p>
+                  <p className="mt-0.5 font-mono text-sm tabular-nums text-neonLime">{fmtUsdc(m.amount)} USDC</p>
                 </div>
                 <StatusBadge status={status} />
               </div>
 
               {m.isWorkSubmitted && m.workProofHash && (
-                <div className="mt-3 rounded-xl bg-brandSecondary/25 p-3">
-                  <p className="label-caps text-brandHighlight/70">Work proof</p>
+                <div className="neu-card mt-3 rounded-xl border border-white/5 p-3">
+                  <p className="label-caps text-zinc-500">Work proof</p>
                   <div className="mt-1">
                     <ProofViewer proof={m.workProofHash} compact />
                   </div>
@@ -154,7 +154,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
                   </button>
                 )}
                 {role === 'employer' && status === 'PENDING' && (
-                  <span className="text-xs text-brandHighlight/70">Waiting for the contractor to submit work.</span>
+                  <span className="self-center text-xs text-zinc-500">Waiting for contractor to submit work.</span>
                 )}
                 {role === 'employer' && status === 'APPROVED' && (
                   <>
@@ -171,7 +171,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
                       {escrow.isPQProtected && <Fingerprint className="size-4" />}
                       Release Payout
                     </button>
-                    <span className="self-center text-xs text-brandHighlight/70">
+                    <span className="self-center text-xs text-zinc-500">
                       The contractor can also claim this themselves.
                     </span>
                   </>
@@ -189,7 +189,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
                 )}
                 {role === 'contractor' && status === 'WORK SUBMITTED' && (
                   <>
-                    <span className="self-center text-xs text-brandHighlight/70">Waiting for employer approval.</span>
+                    <span className="self-center text-xs text-zinc-500">Waiting for employer approval.</span>
                     <button
                       type="button"
                       className="btn-ghost"
@@ -214,14 +214,14 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
                       Claim Payout
                     </button>
                   ) : (
-                    <span className="text-xs font-medium text-brandHighlight/70">
+                    <span className="self-center text-xs font-medium text-zinc-400">
                       Claimable in {formatDuration((claimableAt(escrow, m) ?? 0) - now)}
                     </span>
                   )
                 )}
                 {status === 'RELEASED' && (
                   <button type="button" className="btn-ghost w-full sm:w-auto" onClick={() => openInvoice(escrow, index)}>
-                    <Receipt className="size-4" />
+                    <Receipt className="size-4 text-neonLime" />
                     Invoice / Receipt
                   </button>
                 )}
@@ -245,7 +245,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
       </ul>
 
       {role === 'employer' && !escrow.isTerminated && hasPending && (
-        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-brandSecondary pt-4">
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/5 pt-4">
           <button
             type="button"
             className="btn-ghost"
@@ -259,7 +259,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
             Refund Unstarted Milestones
           </button>
           {hasSubmittedWaiting && (
-            <span className="text-xs text-brandHighlight/70">
+            <span className="text-xs text-zinc-500">
               Refunds are blocked while submitted work is waiting for your approval.
             </span>
           )}

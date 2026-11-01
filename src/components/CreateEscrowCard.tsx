@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ConnectKitButton } from 'connectkit'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { getAddress, isAddress, type Hex } from 'viem'
-import { Eye, Fingerprint, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Droplets, Eye, Fingerprint, Loader2, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { ARC_CHAIN_ID } from '@/config'
 import { VAULT_ADDRESS } from '@/contracts/vault'
@@ -70,25 +70,36 @@ export function CreateEscrowCard({
 
   const contractorValid = isAddress(contractor)
   const contractorIsSelf = contractorValid && !!address && contractor.toLowerCase() === address.toLowerCase()
-  const insufficient = balance !== undefined && total > balance
+
+  // Safe buffer for Arc native transaction gas fees (~0.01 USDC)
+  const GAS_BUFFER = 10_000n
+  const hasGasShortage = balance !== undefined && total > 0n && balance >= total && balance < total + GAS_BUFFER
+  const insufficient = balance !== undefined && (total > balance || hasGasShortage || balance === 0n)
+  const isWrongChain = isConnected && chainId !== ARC_CHAIN_ID
 
   const problem = !VAULT_ADDRESS
     ? 'Vault contract is not deployed yet.'
-    : !contractor
-      ? 'Enter the contractor address.'
-      : !contractorValid
-        ? 'Contractor address is not valid.'
-        : contractorIsSelf
-          ? 'Contractor must be a different wallet than yours.'
-          : !allAmountsValid
-            ? 'Every milestone needs an amount above zero.'
-            : !allDescriptions
-              ? 'Every milestone needs a description.'
-              : insufficient
-                ? 'Your USDC balance is lower than the total.'
-                : useBiometric && !passkey.registered
-                  ? 'Set up your Touch ID / Face ID key, or turn off the biometric lock.'
-                  : null
+    : isWrongChain
+      ? `Please switch your wallet network to ${NETWORK.label}.`
+      : !contractor
+        ? 'Enter the contractor address.'
+        : !contractorValid
+          ? 'Contractor address is not valid.'
+          : contractorIsSelf
+            ? 'Contractor must be a different wallet than yours.'
+            : !allAmountsValid
+              ? 'Every milestone needs an amount above zero.'
+              : !allDescriptions
+                ? 'Every milestone needs a description.'
+                : balance !== undefined && balance === 0n
+                  ? 'Your USDC balance is 0.00. Fund your wallet with Arc Testnet USDC first.'
+                  : balance !== undefined && total > balance
+                    ? 'Your USDC balance is lower than the milestone total.'
+                    : hasGasShortage
+                      ? 'You need ~0.01 USDC more to cover transaction gas fees on Arc.'
+                      : useBiometric && !passkey.registered
+                        ? 'Set up your Touch ID / Face ID key, or turn off the biometric lock.'
+                        : null
 
   const onCreate = async () => {
     if (problem || !contractorValid || !address || !VAULT_ADDRESS) return
@@ -121,13 +132,47 @@ export function CreateEscrowCard({
   }
 
   return (
-    <section className={embedded ? 'p-6' : 'rounded-2xl border border-brandSecondary bg-brandSecondary/20 p-6'}>
-      {!embedded && <h2 className="display text-xl font-bold text-brandHighlight">Create Escrow</h2>}
-      <p className="text-sm text-brandHighlight/80">
+    <section className={embedded ? 'p-6' : 'neu-card rounded-2xl border border-white/5 p-6'}>
+      {!embedded && (
+        <div className="mb-4">
+          <h2 className="display text-xl font-bold text-white">Create Escrow</h2>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <span className="neu-sunken inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-[#0b0b0b] px-2.5 py-0.5 font-medium text-zinc-300 font-mono">
+              <span className={`size-2 rounded-full ${NETWORK.isMainnet ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-neonLime shadow-[0_0_8px_#d4ff3f]'}`} />
+              {NETWORK.label}
+            </span>
+            <span className="neu-sunken rounded-md border border-white/5 bg-[#0b0b0b] px-2 py-0.5 font-mono text-[11px] text-zinc-400">
+              Network ID: <strong className="text-white">{NETWORK.chainId}</strong>
+            </span>
+            <span className="neu-sunken rounded-md border border-white/5 bg-[#0b0b0b] px-2 py-0.5 font-mono text-[11px] text-zinc-400" title={NETWORK.rpcUrl}>
+              RPC: <strong className="text-white">{NETWORK.rpcUrl.replace('https://', '')}</strong>
+            </span>
+          </div>
+        </div>
+      )}
+      <p className="text-sm text-zinc-400">
         Lock USDC up front. The contractor is paid per milestone once you approve their work.
       </p>
 
-      <label htmlFor="contractor" className="label-caps mt-5 block text-brandHighlight/70">
+      {isConnected && chainId !== ARC_CHAIN_ID && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+          <div className="flex items-center gap-2">
+            <TriangleAlert className="size-4 shrink-0 text-amber-400" />
+            <span>
+              Wallet network (Chain ID: <strong>{chainId ?? 'unknown'}</strong>) does not match app target (<strong>{NETWORK.label} • Chain ID: {NETWORK.chainId}</strong>).
+            </span>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-3 py-1 font-semibold text-amber-300 transition-opacity hover:opacity-90"
+            onClick={() => switchChain({ chainId: ARC_CHAIN_ID })}
+          >
+            Switch to {NETWORK.label}
+          </button>
+        </div>
+      )}
+
+      <label htmlFor="contractor" className="label-caps mt-5 block text-zinc-500">
         Contractor address
       </label>
       <input
@@ -141,26 +186,26 @@ export function CreateEscrowCard({
       />
 
       <div className="mt-5 flex items-center justify-between">
-        <p className="label-caps text-brandHighlight/70">Milestones</p>
-        <p className="text-xs tabular-nums text-brandHighlight/70">
+        <p className="label-caps text-zinc-500">Milestones</p>
+        <p className="text-xs tabular-nums text-zinc-500 font-mono">
           {rows.length}/{MAX_MILESTONES}
         </p>
       </div>
 
       <ul className="mt-2 space-y-4">
         {rows.map((row, index) => (
-          <li key={row.key} className="rounded-2xl border border-brandSecondary/80 bg-brandMain p-4">
+          <li key={row.key} className="neu-sunken rounded-2xl border border-white/5 bg-[#0b0b0b] p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brandHighlight text-sm font-semibold text-brandMain">
+                <span className="neu-card flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-neonLime/30 text-sm font-semibold text-neonLime">
                   {index + 1}
                 </span>
-                <span className="text-sm font-semibold text-brandHighlight">Milestone {index + 1}</span>
+                <span className="text-sm font-semibold text-white">Milestone {index + 1}</span>
               </div>
 
               <div className="relative w-40 shrink-0">
                 <input
-                  className="field py-1.5 pr-14 text-right tabular-nums"
+                  className="field py-1.5 pr-14 text-right tabular-nums font-mono text-sm"
                   inputMode="decimal"
                   placeholder="0.00"
                   aria-label={`Milestone ${index + 1} amount in USDC`}
@@ -170,14 +215,14 @@ export function CreateEscrowCard({
                     if (AMOUNT_PATTERN.test(value)) updateRow(row.key, { amount: value })
                   }}
                 />
-                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-brandHighlight/70">
+                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-zinc-500">
                   USDC
                 </span>
               </div>
 
               <button
                 type="button"
-                className="flex size-11 shrink-0 items-center justify-center rounded-xl text-red-600 hover:bg-red-600/10 disabled:opacity-30"
+                className="flex size-11 shrink-0 items-center justify-center rounded-xl text-zinc-500 hover:text-red-400 hover:bg-white/5 disabled:opacity-30 transition-colors"
                 onClick={() => setRows((current) => current.filter((r) => r.key !== row.key))}
                 disabled={rows.length === 1}
                 aria-label={`Remove milestone ${index + 1}`}
@@ -189,7 +234,7 @@ export function CreateEscrowCard({
             <div
               role="tablist"
               aria-label={`Milestone ${index + 1} description mode`}
-              className="mb-2 inline-flex rounded-lg border border-brandHighlight/10 bg-brandSecondary/30 p-0.5"
+              className="neu-card mb-2 inline-flex rounded-lg border border-white/5 bg-[#111111] p-0.5"
             >
               {(
                 [
@@ -205,8 +250,8 @@ export function CreateEscrowCard({
                   onClick={() => updateRow(row.key, { mode: id })}
                   className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-3 text-xs transition-all ${
                     row.mode === id
-                      ? 'bg-brandHighlight font-medium text-brandMain shadow-sm'
-                      : 'text-brandHighlight/70 hover:text-brandHighlight'
+                      ? 'neu-sunken border border-neonLime/30 font-medium text-neonLime shadow-glow-lime'
+                      : 'text-zinc-500 hover:text-white'
                   }`}
                 >
                   <Icon className="size-3.5" />
@@ -219,26 +264,26 @@ export function CreateEscrowCard({
               <>
                 <textarea
                   rows={3}
-                  className="w-full resize-y rounded-xl border border-brandHighlight/20 bg-white p-3 text-sm text-brandHighlight outline-none placeholder:text-brandHighlight/45 focus:border-brandSecondary focus:ring-[3px] focus:ring-brandSecondary/55"
+                  className="field min-h-24 resize-y text-sm"
                   placeholder="Describe deliverables, acceptance criteria, or links for this milestone..."
                   aria-label={`Milestone ${index + 1} description`}
                   value={row.description}
                   maxLength={MAX_DESCRIPTION_LENGTH}
                   onChange={(e) => updateRow(row.key, { description: e.target.value })}
                 />
-                <p className="mt-1 flex justify-between gap-3 text-xs text-brandHighlight/70">
+                <p className="mt-1 flex justify-between gap-3 text-xs text-zinc-500">
                   <span>First line is the milestone title. Use - or 1. for lists. Links are clickable.</span>
-                  <span className="tabular-nums">
+                  <span className="tabular-nums font-mono">
                     {row.description.length}/{MAX_DESCRIPTION_LENGTH}
                   </span>
                 </p>
               </>
             ) : (
-              <div className="min-h-24 rounded-xl border border-brandHighlight/20 bg-white p-3">
+              <div className="neu-sunken min-h-24 rounded-xl border border-white/5 bg-[#0b0b0b] p-3 text-zinc-200">
                 {row.description.trim() ? (
                   <RichText text={row.description} />
                 ) : (
-                  <p className="text-sm text-brandHighlight/60">Nothing to preview yet. Switch to Write Details.</p>
+                  <p className="text-sm text-zinc-500">Nothing to preview yet. Switch to Write Details.</p>
                 )}
               </div>
             )}
@@ -252,29 +297,29 @@ export function CreateEscrowCard({
         disabled={rows.length >= MAX_MILESTONES}
         onClick={() => setRows((current) => [...current, newRow()])}
       >
-        <Plus className="size-4" />
+        <Plus className="size-4 text-neonLime" />
         Add Milestone
       </button>
 
-      <div className="mt-5 rounded-xl border border-brandHighlight/15 bg-brandMain p-4">
+      <div className="neu-card mt-5 rounded-xl border border-white/5 p-4">
         <label className="flex min-h-11 cursor-pointer items-start gap-3">
           <input
             type="checkbox"
-            className="mt-1 size-4 accent-brandHighlight"
+            className="mt-1 size-4 accent-[#d4ff3f]"
             checked={useBiometric}
             onChange={(e) => setUseBiometric(e.target.checked)}
           />
-          <span className="text-sm font-semibold text-brandHighlight">
+          <span className="text-sm font-semibold text-white">
             Secure with Face ID / Touch ID (post-quantum signature lock)
           </span>
         </label>
         {useBiometric && (
-          <div className="mt-2 space-y-2 pl-7 text-sm text-brandHighlight/80">
+          <div className="mt-2 space-y-2 pl-7 text-sm text-zinc-400">
             {passkey.registered && passkey.fingerprint ? (
-              <p className="flex flex-wrap items-center gap-2 font-medium text-brandHighlight">
+              <p className="flex flex-wrap items-center gap-2 font-medium text-neonPink">
                 <Fingerprint className="size-4" />
                 Biometric Key: Registered
-                <span className="rounded-full bg-brandSecondary/60 px-2.5 py-0.5 font-mono text-xs">
+                <span className="neu-sunken rounded-full border border-neonPink/40 px-2.5 py-0.5 font-mono text-xs text-neonPink shadow-glow-pink">
                   {shortHash(passkey.fingerprint)}
                 </span>
               </p>
@@ -287,7 +332,7 @@ export function CreateEscrowCard({
                   void passkey.register()
                 }}
               >
-                {passkey.busy ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
+                {passkey.busy ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4 text-neonPink" />}
                 Set Up Touch ID / Face ID Key
               </button>
             )}
@@ -295,7 +340,7 @@ export function CreateEscrowCard({
             {isInsideFrame() && (
               <p>Browsers often block Touch ID inside the Arc Studio preview. Open the app in its own tab to use it.</p>
             )}
-            <p>
+            <p className="text-xs text-zinc-500">
               Touch ID / Face ID is then required for the employer to release a payout or refund. The wallet key
               alone cannot do either on this escrow. Arc verifies a post-quantum SLH-DSA signature that your
               passkey unlocks. A stolen wallet key could still approve milestones, which pays the contractor.
@@ -304,39 +349,39 @@ export function CreateEscrowCard({
         )}
       </div>
 
-      <div className="mt-4 rounded-xl border border-brandSecondary bg-brandSecondary/15 p-4">
-        <label htmlFor="review-window" className="text-sm font-semibold text-brandHighlight">
+      <div className="neu-card mt-4 rounded-xl border border-white/5 p-4">
+        <label htmlFor="review-window" className="text-sm font-semibold text-white">
           Review window
         </label>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <select
             id="review-window"
-            className="field w-auto min-w-36"
+            className="field w-auto min-w-36 font-mono text-sm"
             value={reviewDays}
             onChange={(e) => setReviewDays(Number(e.target.value))}
           >
             {REVIEW_WINDOW_DAYS.map((d) => (
-              <option key={d} value={d}>
+              <option key={d} value={d} className="bg-[#111111] text-white">
                 {d} {d === 1 ? 'day' : 'days'}
                 {d === DEFAULT_REVIEW_DAYS ? ' (default)' : ''}
               </option>
             ))}
           </select>
-          <p className="min-w-0 flex-1 text-xs text-brandHighlight/80">
+          <p className="min-w-0 flex-1 text-xs text-zinc-400">
             After the contractor submits proof, you have this long to approve it. If you do nothing, the
             contractor can claim that milestone&apos;s payout once the window ends.
           </p>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-brandHighlight/15 pt-5">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-white/5 pt-5">
         <div>
-          <p className="label-caps text-brandHighlight/70">Total to deposit</p>
-          <p className="display text-2xl font-black tabular-nums text-brandHighlight">
-            {fmtUsdc(total)} <span className="text-base font-medium">USDC</span>
+          <p className="label-caps text-zinc-500">Total to deposit</p>
+          <p className="display text-2xl font-black tabular-nums text-white">
+            {fmtUsdc(total)} <span className="text-base font-medium text-neonLime">USDC</span>
           </p>
           {balance !== undefined && (
-            <p className="text-xs tabular-nums text-brandHighlight/70">Balance {fmtUsdc(balance)} USDC</p>
+            <p className="text-xs tabular-nums text-zinc-500 font-mono">Balance {fmtUsdc(balance)} USDC</p>
           )}
         </div>
 
@@ -370,20 +415,22 @@ export function CreateEscrowCard({
         )}
       </div>
 
-      {isConnected && chainId === ARC_CHAIN_ID && problem && (
-        <p className="mt-3 text-sm text-brandHighlight/80">
-          {problem}
+      {isConnected && problem && (
+        <div className="neu-sunken mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neonPink/40 bg-[#0b0b0b] p-3 text-sm text-neonPink shadow-glow-pink">
+          <p className="min-w-[200px] flex-1 font-medium">{problem}</p>
           {insufficient && onFund && (
-            <>
-              {' '}
-              <button type="button" className="font-semibold underline underline-offset-4" onClick={onFund}>
-                Fund with USDC
-              </button>
-            </>
+            <button
+              type="button"
+              className="btn-pink px-3 py-1.5 text-xs font-semibold"
+              onClick={onFund}
+            >
+              <Droplets className="size-3.5" />
+              Fund with USDC
+            </button>
           )}
-        </p>
+        </div>
       )}
-      <p className="mt-3 text-xs text-brandHighlight/70">
+      <p className="mt-3 text-xs text-zinc-500 font-mono">
         Two wallet confirmations: first the USDC allowance, then the escrow deposit.
       </p>
     </section>

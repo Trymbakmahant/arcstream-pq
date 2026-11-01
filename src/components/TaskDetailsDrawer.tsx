@@ -46,7 +46,7 @@ export function TaskDetailsDrawer({ target, escrow, onClose, onSubmitWork, onPqA
       {open && target && escrow && (
         <motion.div
           key="task-details"
-          className="fixed inset-0 z-[8000] flex justify-end bg-brandHighlight/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[8000] flex justify-end bg-black/80 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -56,7 +56,7 @@ export function TaskDetailsDrawer({ target, escrow, onClose, onSubmitWork, onPqA
             role="dialog"
             aria-modal="true"
             aria-label="Milestone details"
-            className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-brandSecondary bg-brandMain"
+            className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-white/5 bg-[#0e0e0e]"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -113,19 +113,19 @@ function DrawerBody({
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-brandSecondary bg-brandMain p-6">
+      <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-white/5 bg-[#0e0e0e] p-6">
         <div className="min-w-0">
-          <p className="label-caps text-brandHighlight/70">
+          <p className="label-caps text-zinc-500">
             Escrow #{escrow.id.toString()} / Milestone {target.index + 1}
           </p>
-          <h2 className="display mt-1 text-balance text-xl font-bold text-brandHighlight">
+          <h2 className="display mt-1 text-balance text-xl font-bold text-white">
             {milestoneTitle(milestone.description)}
           </h2>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
+          className="neu-card flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
           aria-label="Close details"
         >
           <X className="size-5" />
@@ -135,24 +135,24 @@ function DrawerBody({
       <div className="flex-1 space-y-6 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <StatusBadge status={status} />
-          <p className="display text-2xl font-black tabular-nums text-brandHighlight">
-            {fmtUsdc(milestone.amount)} <span className="text-sm font-medium">USDC</span>
+          <p className="display text-2xl font-black tabular-nums text-white">
+            {fmtUsdc(milestone.amount)} <span className="text-sm font-medium text-neonLime">USDC</span>
           </p>
         </div>
 
         <section>
-          <h3 className="label-caps text-brandHighlight/70">Deliverables and scope</h3>
-          <div className="mt-2 rounded-2xl border border-brandHighlight/15 bg-white p-4">
+          <h3 className="label-caps text-zinc-500">Deliverables and scope</h3>
+          <div className="neu-sunken mt-2 rounded-2xl border border-white/5 bg-[#0b0b0b] p-4 text-zinc-200">
             <RichText text={milestone.description || 'No description was provided.'} />
           </div>
         </section>
 
         <section>
-          <h3 className="label-caps text-brandHighlight/70">Work proof</h3>
+          <h3 className="label-caps text-zinc-500">Work proof</h3>
           {submitted ? (
-            <div className="mt-2 space-y-2 rounded-2xl border border-brandSecondary bg-brandSecondary/25 p-4">
+            <div className="neu-card mt-2 space-y-2 rounded-2xl border border-white/5 p-4">
               <ProofViewer proof={milestone.workProofHash} />
-              <p className="text-xs tabular-nums text-brandHighlight/80">
+              <p className="text-xs tabular-nums text-zinc-400 font-mono">
                 {submission.isLoading
                   ? 'Looking up submission time...'
                   : submission.data
@@ -161,7 +161,7 @@ function DrawerBody({
               </p>
             </div>
           ) : (
-            <p className="mt-2 rounded-2xl border border-dashed border-brandSecondary p-4 text-sm text-brandHighlight/80">
+            <p className="neu-sunken mt-2 rounded-2xl border border-dashed border-white/10 p-4 text-sm text-zinc-500">
               {target.role === 'employer'
                 ? 'The contractor has not submitted work for this milestone yet.'
                 : 'You have not submitted work for this milestone yet.'}
@@ -171,16 +171,16 @@ function DrawerBody({
 
         {claimAt !== null && (
           <section>
-            <h3 className="label-caps text-brandHighlight/70">Review window</h3>
-            <div className="mt-2 rounded-2xl border border-brandSecondary bg-white p-4 text-sm text-brandHighlight">
-              <p className="font-semibold tabular-nums">
+            <h3 className="label-caps text-zinc-500">Review window</h3>
+            <div className="neu-card mt-2 rounded-2xl border border-neonLime/30 p-4 text-sm text-white">
+              <p className="font-semibold tabular-nums text-neonLime">
                 {windowOver ? 'The review window has ended.' : `Ends in ${formatDuration(claimAt - now)}`}
-                <span className="font-normal text-brandHighlight/70">
+                <span className="font-normal text-zinc-400">
                   {' '}
                   ({new Date(claimAt * 1000).toLocaleString()})
                 </span>
               </p>
-              <p className="mt-1 text-xs text-brandHighlight/80">
+              <p className="mt-1 text-xs text-zinc-400">
                 {target.role === 'employer'
                   ? 'Approve before the window ends. Afterwards the contractor can claim this milestone without your approval.'
                   : windowOver
@@ -191,21 +191,21 @@ function DrawerBody({
           </section>
         )}
 
-        <p className="text-xs text-brandHighlight/70">
+        <p className="text-xs text-zinc-500">
           {target.role === 'employer' ? 'Contractor' : 'Employer'}{' '}
           <a
             href={addressUrl(counterparty)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-mono font-medium underline underline-offset-2"
+            className="inline-flex items-center gap-1 font-mono font-medium text-white hover:text-neonLime underline underline-offset-2 transition-colors"
           >
             {shortAddress(counterparty)}
-            <ExternalLink className="size-3" />
+            <ExternalLink className="size-3 text-zinc-500" />
           </a>
         </p>
       </div>
 
-      <div className="sticky bottom-0 flex flex-wrap gap-3 border-t border-brandSecondary bg-brandMain p-6">
+      <div className="sticky bottom-0 flex flex-wrap gap-3 border-t border-white/5 bg-[#0e0e0e] p-6">
         {target.role === 'employer' && status === 'WORK SUBMITTED' && (
           <button
             type="button"

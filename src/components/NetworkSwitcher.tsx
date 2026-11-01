@@ -42,22 +42,26 @@ export function NetworkSwitcher({ wrongNetwork }: { wrongNetwork: boolean }) {
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brandHighlight/10 bg-white px-4 font-mono text-xs font-medium text-brandHighlight hover:border-brandSecondary"
+          className="neu-card inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/5 px-4 font-mono text-xs font-medium text-white hover:border-white/10 transition-colors"
         >
           <span
             className={`size-2 rounded-full ${
-              wrongNetwork ? 'border border-brandHighlight' : NETWORK.isMainnet ? 'bg-brandHighlight' : 'bg-brandSecondary'
+              wrongNetwork
+                ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'
+                : NETWORK.isMainnet
+                  ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                  : 'bg-neonLime shadow-[0_0_8px_#d4ff3f]'
             }`}
           />
           {wrongNetwork ? 'Wrong network' : `${NETWORK.label} (${NETWORK.chainId})`}
-          <ChevronDown className={`size-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`size-4 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
 
         {open && (
           <ul
             role="listbox"
             aria-label="Select network"
-            className="absolute left-0 z-50 mt-2 w-72 rounded-2xl border border-brandHighlight/10 bg-white p-2 shadow-xl"
+            className="neu-card absolute left-0 z-50 mt-2 w-72 rounded-2xl border border-white/10 bg-[#111111] p-2 shadow-2xl"
           >
             {ORDER.map((id) => {
               const net = NETWORKS[id]
@@ -67,16 +71,16 @@ export function NetworkSwitcher({ wrongNetwork }: { wrongNetwork: boolean }) {
                   <button
                     type="button"
                     onClick={() => choose(id)}
-                    className="flex min-h-12 w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-brandSecondary/25"
+                    className="flex min-h-12 w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-white/5 transition-colors"
                   >
                     <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center">
-                      {active && <Check className="size-4 text-brandHighlight" />}
+                      {active && <Check className="size-4 text-neonLime" />}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-brandHighlight">
-                        {net.label} <span className="font-mono text-xs font-normal">({net.chainId})</span>
+                      <span className="block text-sm font-semibold text-white">
+                        {net.label} <span className="font-mono text-xs font-normal text-zinc-400">({net.chainId})</span>
                       </span>
-                      <span className="block text-xs text-brandHighlight/70">
+                      <span className="block text-xs text-zinc-400">
                         {net.isMainnet ? 'Real USDC. Transactions are irreversible.' : 'Test USDC. No real value.'}
                         {!net.vault && ' Vault not deployed yet.'}
                       </span>
@@ -100,7 +104,7 @@ function MainnetConfirm({ open, onClose }: { open: boolean; onClose: () => void 
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[9800] flex items-center justify-center bg-brandHighlight/80 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[9800] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -110,24 +114,24 @@ function MainnetConfirm({ open, onClose }: { open: boolean; onClose: () => void 
           aria-label="Switch to Arc Mainnet"
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl border border-brandSecondary bg-brandMain p-6 shadow-2xl"
+            className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
             initial={{ y: 16, scale: 0.98 }}
             animate={{ y: 0, scale: 1 }}
             exit={{ y: 16, scale: 0.98 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-brandHighlight text-brandMain">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-neonPink/20 border border-neonPink/30 text-neonPink shadow-glow-pink">
                 <TriangleAlert className="size-5" />
               </span>
-              <h2 className="display text-xl font-bold text-brandHighlight">Switch to Arc Mainnet?</h2>
+              <h2 className="display text-xl font-bold text-white">Switch to Arc Mainnet?</h2>
             </div>
-            <p className="mt-4 text-sm text-brandHighlight/90">
+            <p className="mt-4 text-sm text-zinc-400">
               Arc Mainnet uses real USDC, and transactions cannot be reversed. ArcStreamVault has not had an
               independent professional audit. Use small amounts and review every address before you confirm.
             </p>
             {!NETWORKS.mainnet.vault && (
-              <p className="mt-3 rounded-xl border border-brandHighlight/30 bg-white p-3 text-sm text-brandHighlight">
+              <p className="neu-sunken mt-3 rounded-xl border border-white/5 bg-[#0b0b0b] p-3 text-sm text-amber-400">
                 ArcStreamVault is not deployed on Arc Mainnet yet, so the dashboard will be empty until it is.
               </p>
             )}
@@ -178,10 +182,10 @@ export function SwitchNetworkButton({
 export function MainnetBanner() {
   if (!NETWORK.isMainnet) return null
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 bg-brandHighlight px-4 py-2 text-center text-xs font-semibold text-brandMain">
+    <div className="neu-card flex flex-wrap items-center justify-center gap-2 border-b border-neonPink/30 bg-[#111111] px-4 py-2 text-center text-xs font-semibold text-neonPink shadow-glow-pink">
       <TriangleAlert className="size-4" />
       Arc Mainnet: real USDC, irreversible transactions.
-      <button type="button" className="underline underline-offset-4" onClick={() => switchNetwork('testnet')}>
+      <button type="button" className="underline underline-offset-4 hover:text-white" onClick={() => switchNetwork('testnet')}>
         Switch to Testnet
       </button>
     </div>

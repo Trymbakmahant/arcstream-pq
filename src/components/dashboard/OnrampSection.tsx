@@ -31,12 +31,12 @@ export function OnrampSection({ onDone }: { onDone: () => void }) {
 
 function HostedOnramp() {
   return (
-    <section className="mt-4 rounded-xl border border-brandHighlight/15 bg-white p-4">
-      <h3 className="flex items-center gap-2 font-semibold text-brandHighlight">
-        <CreditCard className="size-4" />
+    <section className="neu-sunken mt-4 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+      <h3 className="flex items-center gap-2 font-semibold text-white">
+        <CreditCard className="size-4 text-neonPink" />
         Buy USDC with a card or Apple Pay
       </h3>
-      <p className="mt-2 text-sm text-brandHighlight/80">
+      <p className="mt-2 text-sm text-zinc-400">
         Circle Onramp, hosted by Arc, delivers USDC on Arc to the wallet address you give it. Copy your address
         above and paste it there. This spends real money, and identity checks, fees and limits are shown before you
         pay.
@@ -122,12 +122,12 @@ function SandboxOnramp({ onDone }: { onDone: () => void }) {
   }, [session, onDone, fail])
 
   return (
-    <section className="mt-4 rounded-xl border border-brandHighlight/15 bg-white p-4">
-      <h3 className="flex items-center gap-2 font-semibold text-brandHighlight">
-        <CreditCard className="size-4" />
+    <section className="neu-sunken mt-4 rounded-xl border border-white/5 bg-[#0b0b0b] p-4">
+      <h3 className="flex items-center gap-2 font-semibold text-white">
+        <CreditCard className="size-4 text-neonPink" />
         Buy USDC with a card or Apple Pay (sandbox)
       </h3>
-      <p className="mt-2 text-sm text-brandHighlight/80">
+      <p className="mt-2 text-sm text-zinc-400">
         This is Circle&apos;s test environment: no real money moves, and it may not send USDC to Arc Testnet. Use the
         Circle Faucet above when you just need test USDC. Real purchases are available on Arc Mainnet.
       </p>
@@ -145,18 +145,18 @@ function SandboxOnramp({ onDone }: { onDone: () => void }) {
           {phase === 'signing' ? 'Sign in your wallet...' : phase === 'loading' ? 'Opening...' : 'Try the card flow'}
         </button>
       )}
-      {!isConnected && <p className="mt-2 text-xs text-brandHighlight/70">Connect a wallet to try it.</p>}
+      {!isConnected && <p className="mt-2 text-xs text-zinc-500">Connect a wallet to try it.</p>}
       {isConnected && phase === 'idle' && (
-        <p className="mt-2 flex items-start gap-1.5 text-xs text-brandHighlight/70">
-          <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
+        <p className="mt-2 flex items-start gap-1.5 text-xs text-zinc-400">
+          <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-neonLime" />
           You sign a short message that proves this wallet is yours. It moves no funds.
         </p>
       )}
-      {error && <p className="mt-2 text-sm font-medium text-brandHighlight">{error}</p>}
+      {error && <p className="mt-2 text-sm font-medium text-neonPink">{error}</p>}
 
       {phase === 'open' && (
         <div className="mt-3">
-          <div ref={containerRef} className="h-[640px] w-full overflow-hidden rounded-xl border border-brandSecondary" />
+          <div ref={containerRef} className="neu-sunken h-[640px] w-full overflow-hidden rounded-xl border border-white/10" />
           <button
             type="button"
             className="btn-ghost mt-3 min-h-11"

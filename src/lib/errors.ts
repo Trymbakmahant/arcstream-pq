@@ -43,13 +43,41 @@ export function parseOnchainError(error: unknown): string {
   }
 
   const lower = message.toLowerCase()
-  if (lower.includes('insufficient funds') || lower.includes('exceeds balance')) {
-    return 'Insufficient balance. Add USDC to your wallet and try again.'
+
+  // 1. Gas / insufficient balance errors (Arc native gas is USDC)
+  if (
+    lower.includes('gas required exceeds allowance') ||
+    lower.includes('insufficient funds for gas') ||
+    lower.includes('insufficient funds') ||
+    lower.includes('exceeds balance') ||
+    lower.includes('insufficient balance') ||
+    lower.includes('not enough funds')
+  ) {
+    return 'Insufficient USDC balance. On Arc, USDC pays for both milestone amounts and transaction gas fees. Fund your wallet with testnet USDC and try again.'
   }
-  if (lower.includes('allowance')) return 'USDC allowance is too low. Approve the amount first.'
-  if (lower.includes('network') || lower.includes('timeout')) {
-    return 'Network issue. Check your connection and retry.'
+
+  // 2. Specific ERC-20 token allowance error (NOT general approve function calls)
+  if (
+    lower.includes('transfer amount exceeds allowance') ||
+    lower.includes('erc20: insufficient allowance') ||
+    lower.includes('allowance too low')
+  ) {
+    return 'USDC allowance is too low. Approve the amount first.'
   }
+
+  // 3. Network, chain mismatch, or RPC connection errors
+  if (
+    lower.includes('network') ||
+    lower.includes('timeout') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('could not connect') ||
+    lower.includes('chain mismatch') ||
+    lower.includes('unsupported chain') ||
+    lower.includes('connection refused')
+  ) {
+    return 'Network connection issue. Ensure your wallet is connected to Arc Testnet (Chain ID 5042002) and retry.'
+  }
+
   if (lower.includes('reverted')) return 'The transaction was rejected by the contract.'
   return 'Something went wrong. Please try again.'
 }

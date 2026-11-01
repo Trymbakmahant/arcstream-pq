@@ -37,7 +37,19 @@ export default defineConfig({
   server: {
     allowedHosts: true,
     cors: true,
-    // Onramp session API (server/onramp.ts); the Circle API key stays on that server.
-    proxy: { '/api': 'http://127.0.0.1:8787' },
+    // Onramp session API and local RPC proxy to bypass client-side adblockers that block *.arc.io
+    proxy: {
+      '/api': 'http://127.0.0.1:8787',
+      '/rpc-testnet': {
+        target: 'https://rpc.testnet.arc.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/rpc-testnet/, ''),
+      },
+      '/rpc-mainnet': {
+        target: 'https://rpc.arc.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/rpc-mainnet/, ''),
+      },
+    },
   },
 })

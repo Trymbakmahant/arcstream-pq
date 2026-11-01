@@ -64,7 +64,7 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
         <div
           role="tablist"
           aria-label="Escrow filter"
-          className="inline-flex max-w-full flex-wrap rounded-2xl border border-brandHighlight/10 bg-white p-1"
+          className="neu-sunken inline-flex max-w-full flex-wrap rounded-2xl border border-white/5 p-1"
         >
           {TABS.map(({ id, label }) => {
             const active = tab === id
@@ -75,17 +75,17 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
                 role="tab"
                 aria-selected={active}
                 onClick={() => setTab(id)}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm transition-colors ${
+                className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm transition-all ${
                   active
-                    ? 'bg-brandHighlight font-medium text-brandMain'
-                    : 'text-brandHighlight/75 hover:bg-brandSecondary/25 hover:text-brandHighlight'
+                    ? 'neu-card border border-neonLime/40 font-semibold text-neonLime shadow-glow-lime'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {label}
                 {isConnected && counts[id] > 0 && (
                   <span
-                    className={`rounded-full px-1.5 py-0.5 text-[0.625rem] font-bold tabular-nums ${
-                      active ? 'bg-brandSecondary text-brandHighlight' : 'bg-brandSecondary/40'
+                    className={`rounded-full px-1.5 py-0.5 text-[0.625rem] font-bold tabular-nums font-mono ${
+                      active ? 'neu-sunken border border-neonLime/30 text-neonLime' : 'neu-sunken border border-white/5 text-zinc-500'
                     }`}
                   >
                     {counts[id]}
@@ -97,7 +97,7 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
         </div>
 
         <div className="flex items-center gap-2">
-          <div role="group" aria-label="View" className="inline-flex rounded-xl border border-brandHighlight/10 bg-white p-1">
+          <div role="group" aria-label="View" className="neu-sunken inline-flex rounded-xl border border-white/5 p-1">
             {(
               [
                 { id: 'grid', label: 'Card view', icon: LayoutGrid },
@@ -110,8 +110,8 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
                 aria-label={label}
                 aria-pressed={view === id}
                 onClick={() => setView(id)}
-                className={`flex size-10 items-center justify-center rounded-lg ${
-                  view === id ? 'bg-brandHighlight text-brandMain' : 'text-brandHighlight/70 hover:bg-brandSecondary/25'
+                className={`flex size-10 items-center justify-center rounded-lg transition-all ${
+                  view === id ? 'neu-card border border-neonLime/40 text-neonLime shadow-glow-lime' : 'text-zinc-500 hover:text-white'
                 }`}
               >
                 <Icon className="size-4" />
@@ -132,7 +132,7 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
       ) : error ? (
         <ErrorState />
       ) : loading ? (
-        <div className="rounded-2xl border border-brandHighlight/5 bg-white">
+        <div className="neu-card rounded-2xl border border-white/5">
           <LoadingState />
         </div>
       ) : visible.length === 0 ? (
@@ -142,7 +142,7 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
             : 'No milestones match this filter or search.'}
         </EmptyState>
       ) : view === 'list' ? (
-        <div className="overflow-hidden rounded-2xl border border-brandHighlight/5 bg-white">
+        <div className="neu-card overflow-hidden rounded-2xl border border-white/5">
           <EscrowTable rows={visible} onSubmitWork={onSubmitWork} onViewDetails={onViewDetails} onPqAuth={onPqAuth} />
         </div>
       ) : (

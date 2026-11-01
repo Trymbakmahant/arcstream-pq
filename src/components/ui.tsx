@@ -5,24 +5,24 @@ import type { MilestoneStatus } from '@/hooks/useEscrows'
 
 export function StatusBadge({ status }: { status: MilestoneStatus }) {
   const base =
-    'inline-flex min-h-7 items-center gap-1 rounded-full px-3 text-[0.6875rem] font-bold tracking-[0.08em]'
+    'inline-flex min-h-7 items-center gap-1 rounded-full px-3 text-[0.6875rem] font-bold tracking-[0.08em] font-mono'
   switch (status) {
     case 'PENDING':
-      return <span className={`${base} border border-brandSecondary text-brandHighlight`}>PENDING</span>
+      return <span className={`${base} neu-sunken border border-white/5 text-amber-400`}>PENDING</span>
     case 'WORK SUBMITTED':
-      return <span className={`${base} bg-brandSecondary/60 text-brandHighlight`}>WORK SUBMITTED</span>
+      return <span className={`${base} neu-card border border-neonPink/50 text-neonPink shadow-glow-pink font-bold`}>WORK SUBMITTED</span>
     case 'APPROVED':
-      return <span className={`${base} bg-brandHighlight text-brandMain`}>APPROVED</span>
+      return <span className={`${base} neu-card border border-neonLime/50 text-neonLime shadow-glow-lime font-bold`}>APPROVED</span>
     case 'RELEASED':
       return (
-        <span className={`${base} border border-brandHighlight/25 text-brandHighlight/60`}>
-          <Check className="size-3" />
+        <span className={`${base} neu-sunken border border-white/5 text-zinc-400`}>
+          <Check className="size-3 text-neonLime" />
           RELEASED
         </span>
       )
     case 'CLOSED':
       return (
-        <span className={`${base} border border-dashed border-brandHighlight/30 text-brandHighlight/60`}>
+        <span className={`${base} neu-sunken border border-dashed border-white/10 text-zinc-600`}>
           CLOSED
         </span>
       )
@@ -43,15 +43,15 @@ export function ProgressBar({
   const approvedPct = Math.min(pct(approved), 100 - releasedPct)
   return (
     <div
-      className="flex h-2.5 w-full overflow-hidden rounded-full bg-brandSecondary/30"
+      className="neu-sunken flex h-2.5 w-full overflow-hidden rounded-full border border-white/5 bg-[#0b0b0b]"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(releasedPct)}
       aria-label="Paid out"
     >
-      <div className="h-full bg-brandHighlight" style={{ width: `${releasedPct}%` }} />
-      <div className="h-full bg-brandSecondary" style={{ width: `${approvedPct}%` }} />
+      <div className="h-full bg-neonLime shadow-[0_0_8px_#d4ff3f]" style={{ width: `${releasedPct}%` }} />
+      <div className="h-full bg-neonPink shadow-[0_0_8px_#ff2dab]" style={{ width: `${approvedPct}%` }} />
     </div>
   )
 }
@@ -116,10 +116,10 @@ export function CopyButton({ value, label = 'Copy', className = '' }: { value: s
       onClick={() => {
         void copy()
       }}
-      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-brandHighlight/15 bg-white px-2.5 text-xs font-semibold text-brandHighlight transition-colors hover:bg-brandSecondary/30 ${className}`}
+      className={`neu-card inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-white/5 px-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:border-white/10 transition-colors ${className}`}
       aria-label={`${label}${copied ? ' (copied)' : ''}`}
     >
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? <Check className="size-3.5 text-neonLime" /> : <Copy className="size-3.5" />}
       {copied ? 'Copied' : label}
     </button>
   )
@@ -130,8 +130,8 @@ export function ProofViewer({ proof, compact = false }: { proof: string; compact
   const info = classifyProof(proof)
   if (info.kind === 'text') {
     return (
-      <div className="flex items-start gap-2 rounded-lg border border-brandHighlight/10 bg-white p-2">
-        <code className="min-w-0 flex-1 break-all px-1 py-1 font-mono text-xs text-brandHighlight" title="Work proof">
+      <div className="neu-sunken flex items-start gap-2 rounded-lg border border-white/5 bg-[#0b0b0b] p-2">
+        <code className="min-w-0 flex-1 break-all px-1 py-1 font-mono text-xs text-zinc-300" title="Work proof">
           {proof}
         </code>
         <CopyButton value={proof} />
@@ -144,14 +144,14 @@ export function ProofViewer({ proof, compact = false }: { proof: string; compact
         href={info.href}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex min-w-0 max-w-full items-center gap-2 rounded-lg border border-brandHighlight/15 bg-white font-semibold text-brandHighlight transition-colors hover:bg-brandSecondary/30 ${
+        className={`neu-card inline-flex min-w-0 max-w-full items-center gap-2 rounded-lg border border-white/5 font-semibold text-white hover:text-neonLime hover:border-neonLime/30 transition-colors ${
           compact ? 'min-h-9 px-2.5 text-xs' : 'min-h-11 px-3.5 text-sm'
         }`}
       >
-        <ExternalLink className="size-4 shrink-0" />
+        <ExternalLink className="size-4 shrink-0 text-neonLime" />
         <span className="min-w-0 break-all">
           {info.kind === 'ipfs' ? 'Open on IPFS' : 'Open Deliverable'}{' '}
-          <span className="font-mono text-[0.6875rem] font-normal text-brandHighlight/70">({info.label})</span>
+          <span className="font-mono text-[0.6875rem] font-normal text-zinc-400">({info.label})</span>
         </span>
       </a>
       <CopyButton value={proof.trim()} label="Copy link" />

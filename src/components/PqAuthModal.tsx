@@ -28,7 +28,7 @@ export function PqAuthModal({ request, onClose }: Props) {
       {request && (
         <motion.div
           key="pq-auth"
-          className="fixed inset-0 z-[9500] flex items-center justify-center bg-brandHighlight/80 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[9500] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -85,7 +85,7 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
 
   return (
     <motion.div
-      className="w-full max-w-md rounded-2xl border border-brandSecondary bg-brandMain p-6 shadow-2xl"
+      className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
       initial={{ y: 16, scale: 0.98 }}
       animate={{ y: 0, scale: 1 }}
       exit={{ y: 16, scale: 0.98 }}
@@ -94,20 +94,20 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="label-caps text-brandHighlight/70">
+          <p className="label-caps text-zinc-500">
             Escrow #{escrow.id.toString()} {isMilestoneAction ? `/ Milestone ${action + 1}` : ''}
           </p>
-          <h2 className="display mt-1 text-xl font-bold text-brandHighlight">
+          <h2 className="display mt-1 text-xl font-bold text-white">
             {kind === 'release' ? 'Authorize payout release' : kind === 'approve-release' ? 'Authorize approval and release' : 'Authorize refund'}
           </h2>
           {milestone && (
-            <p className="mt-1 text-sm tabular-nums text-brandHighlight/80">{fmtUsdc(milestone.amount)} USDC to the contractor</p>
+            <p className="mt-1 text-sm tabular-nums text-neonLime font-mono">{fmtUsdc(milestone.amount)} USDC to the contractor</p>
           )}
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex size-11 items-center justify-center rounded-full text-brandHighlight hover:bg-brandSecondary/40"
+          className="neu-card flex size-11 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
           aria-label="Close"
         >
           <X className="size-5" />
@@ -148,7 +148,7 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
       </ol>
 
       {error && (
-        <p className="mt-4 flex items-start gap-2 rounded-xl border border-brandHighlight bg-brandMain p-3 text-sm font-medium text-brandHighlight">
+        <p className="neu-sunken mt-4 flex items-start gap-2 rounded-xl border border-neonPink/40 bg-[#0b0b0b] p-3 text-sm font-medium text-neonPink shadow-glow-pink">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           {error}
         </p>
@@ -180,7 +180,7 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
         {busy ? 'Signing, this takes a few seconds...' : 'Sign with Post-Quantum Key and Continue'}
       </button>
 
-      <p className="mt-3 text-xs text-brandHighlight/70">
+      <p className="mt-3 text-xs text-zinc-500">
         Your device asks for Touch ID or Face ID. The post-quantum key is then derived in memory and signs this
         one action. Your wallet then sends the signature, and Arc verifies it before any funds move. The wallet
         key alone cannot release or refund this escrow, but it can still approve milestones.
@@ -205,17 +205,19 @@ function Layer({
   failLabel: string
 }) {
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-brandSecondary/70 bg-brandSecondary/20 p-3">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brandHighlight text-brandMain">
+    <li className="neu-sunken flex items-center gap-3 rounded-xl border border-white/5 bg-[#0b0b0b] p-3">
+      <span className="neu-card flex size-8 shrink-0 items-center justify-center rounded-lg border border-neonPink/30 text-neonPink">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-brandHighlight">{title}</p>
-        <p className="truncate font-mono text-xs text-brandHighlight/70">{detail}</p>
+        <p className="text-sm font-semibold text-white">{title}</p>
+        <p className="truncate font-mono text-xs text-zinc-400">{detail}</p>
       </div>
       <span
-        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[0.6875rem] font-bold tracking-[0.06em] ${
-          ok ? 'bg-brandHighlight text-brandMain' : 'border border-brandHighlight/40 text-brandHighlight'
+        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 font-mono text-[0.6875rem] font-bold tracking-[0.06em] ${
+          ok
+            ? 'neu-sunken border border-neonLime/40 text-neonLime shadow-glow-lime'
+            : 'neu-sunken border border-white/5 text-zinc-500'
         }`}
       >
         {ok && <Check className="size-3" />}

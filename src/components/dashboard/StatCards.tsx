@@ -31,17 +31,17 @@ export function StatCards({ escrows, rows, address, loading }: Props) {
 
   return (
     <section className="grid gap-4 xl:grid-cols-3" aria-label="Summary">
-      <div className="flex flex-col rounded-2xl border border-brandHighlight/5 bg-white p-6">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-brandHighlight text-brandMain">
+      <div className="neu-card flex flex-col rounded-2xl p-6">
+        <span className="flex size-11 items-center justify-center rounded-xl bg-[#0b0b0b] border border-neonPink/30 text-neonPink shadow-glow-pink">
           <FileText className="size-5" />
         </span>
-        <h3 className="display mt-5 text-lg font-bold text-brandHighlight">Generate Escrow Report</h3>
-        <p className="mt-1 text-sm text-pretty text-brandHighlight/70">
+        <h3 className="display mt-5 text-lg font-bold text-white">Generate Escrow Report</h3>
+        <p className="mt-1 text-sm text-pretty text-zinc-400">
           Export a snapshot of your escrows read from the contract: amounts, statuses, work proofs and PQ commitments.
         </p>
         <button
           type="button"
-          className="btn-primary mt-5 w-fit rounded-xl"
+          className="btn-pink mt-5 w-fit rounded-xl"
           disabled={rows.length === 0}
           onClick={download}
         >
@@ -50,28 +50,28 @@ export function StatCards({ escrows, rows, address, loading }: Props) {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-brandHighlight/5 bg-white p-6">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-brandSecondary/40 text-brandHighlight">
+      <div className="neu-card rounded-2xl p-6">
+        <span className="flex size-11 items-center justify-center rounded-xl bg-[#0b0b0b] border border-neonLime/30 text-neonLime shadow-glow-lime">
           <Landmark className="size-5" />
         </span>
-        <p className="label-caps mt-5 text-brandHighlight/70">Value locked in your escrows</p>
-        <p className="mt-2 font-mono text-4xl font-semibold tabular-nums tracking-tight text-brandHighlight">
+        <p className="label-caps mt-5 text-zinc-400">Value locked in your escrows</p>
+        <p className="mt-2 font-mono text-4xl font-semibold tabular-nums tracking-tight text-white">
           {money(stats.locked)}
         </p>
-        <p className="mt-5 inline-flex rounded-md bg-brandSecondary/30 px-2.5 py-1 text-xs font-medium text-brandHighlight">
+        <p className="neu-sunken mt-5 inline-flex rounded-lg border border-white/5 px-2.5 py-1 text-xs font-medium text-neonLime font-mono">
           {address ? `${stats.activeEscrows} active as employer` : 'Connect a wallet to see your totals'}
         </p>
       </div>
 
-      <div className="rounded-2xl border border-brandHighlight/5 bg-white p-6">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-brandSecondary/40 text-brandHighlight">
+      <div className="neu-card rounded-2xl p-6">
+        <span className="flex size-11 items-center justify-center rounded-xl bg-[#0b0b0b] border border-white/10 text-zinc-300">
           <BadgeCheck className="size-5" />
         </span>
-        <p className="label-caps mt-5 text-brandHighlight/70">Disbursed escrow payouts</p>
-        <p className="mt-2 font-mono text-4xl font-semibold tabular-nums tracking-tight text-brandHighlight">
+        <p className="label-caps mt-5 text-zinc-400">Disbursed escrow payouts</p>
+        <p className="mt-2 font-mono text-4xl font-semibold tabular-nums tracking-tight text-white">
           {money(stats.paidOut)}
         </p>
-        <p className="mt-5 inline-flex rounded-md bg-brandSecondary/30 px-2.5 py-1 text-xs font-medium tabular-nums text-brandHighlight">
+        <p className="neu-sunken mt-5 inline-flex rounded-lg border border-white/5 px-2.5 py-1 text-xs font-medium tabular-nums text-zinc-300 font-mono">
           {address ? `Received as contractor $${fmtUsdc(stats.received)}` : 'Paid out as employer'}
         </p>
       </div>
