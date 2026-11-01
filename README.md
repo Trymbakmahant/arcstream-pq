@@ -116,6 +116,16 @@ bun run dev
 bun run dev:api
 ```
 
+### Environment variables
+
+All are optional and only matter for the fiat onramp feature:
+
+- `CIRCLE_API_KEY`: Circle API key used by the onramp API server to create sessions.
+- `ONRAMP_API_BASE_URL`: Override for the Circle onramp API base URL.
+- `ONRAMP_API_PORT`: Port for the onramp API server (default 8787).
+- `ONRAMP_REFERRER_DOMAIN`: Domain registered with Circle for onramp sessions.
+- `VITE_ONRAMP_WIDGET_BASE_URL`: Override for the onramp widget URL.
+
 ---
 
 ## 🧪 Verification & Audit Suite
