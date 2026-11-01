@@ -58,7 +58,10 @@ export function TxProvider({ children }: { children: ReactNode }) {
           update(i, { status: 'wallet' })
           const hash = await steps[i].send()
           update(i, { status: 'confirming', hash })
-          const receipt = await publicClient.waitForTransactionReceipt({ hash })
+          const receipt = await publicClient.waitForTransactionReceipt({
+            hash,
+            pollingInterval: 1_000,
+          })
           if (receipt.status !== 'success') {
             throw new Error('Transaction reverted')
           }

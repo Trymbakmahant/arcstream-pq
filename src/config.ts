@@ -16,8 +16,12 @@ export const ARC_CHAIN_ID = NETWORK.chainId
 registerChain(NETWORKS.testnet.chainId, NETWORKS.testnet.rpcUrl)
 registerChain(NETWORKS.mainnet.chainId, NETWORKS.mainnet.rpcUrl)
 
-const testnetHttp = typeof window !== 'undefined' ? http('/rpc-testnet') : http(NETWORKS.testnet.rpcUrl)
-const mainnetHttp = typeof window !== 'undefined' ? http('/rpc-mainnet') : http(NETWORKS.mainnet.rpcUrl)
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+const testnetHttp = isLocalhost ? http('/rpc-testnet') : http(NETWORKS.testnet.rpcUrl)
+const mainnetHttp = isLocalhost ? http('/rpc-mainnet') : http(NETWORKS.mainnet.rpcUrl)
 
 export const config = createConfig({
   chains: [arcTestnet, arc],

@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/rpc-testnet",
+      "destination": "https://rpc.testnet.arc.io"
+    },
+    {
+      "source": "/rpc-mainnet",
+      "destination": "https://rpc.mainnet.arc.io"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
