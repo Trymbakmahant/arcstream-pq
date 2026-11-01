@@ -75,7 +75,6 @@ export function CreateEscrowCard({
   // Safe buffer for Arc native transaction gas fees (~0.01 USDC)
   const GAS_BUFFER = 10_000n
   const hasGasShortage = balance !== undefined && total > 0n && balance >= total && balance < total + GAS_BUFFER
-  const insufficient = balance !== undefined && (total > balance || hasGasShortage || balance === 0n)
   const isWrongChain = isConnected && chainId !== ARC_CHAIN_ID
 
   interface ValidationError {
@@ -208,7 +207,6 @@ export function CreateEscrowCard({
   }
 
   const validation = getValidation()
-  const problem = validation?.message ?? null
 
   const handleButtonClick = async () => {
     if (validation) {
