@@ -1,4 +1,5 @@
 import { ArrowUp } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Link } from '@/lib/router'
 import { VAULT_ADDRESS, addressUrl } from '@/contracts/vault'
 import { NETWORK } from '@/lib/network'
@@ -12,7 +13,13 @@ export function LandingFooter() {
 
   return (
     <footer className="pt-16 pb-12 px-6 border-t border-white/5 bg-[#06080d]">
-      <div className="max-w-6xl mx-auto">
+      <motion.div
+        className="max-w-6xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-white/5">
           {/* Col 1: Brand */}
           <div className="md:col-span-2 space-y-4">
@@ -118,7 +125,7 @@ export function LandingFooter() {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </footer>
   )
 }

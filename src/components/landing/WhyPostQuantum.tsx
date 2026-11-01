@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { addressUrl, VAULT_ADDRESS } from '@/contracts/vault'
 import { NETWORK } from '@/lib/network'
 
@@ -8,7 +9,13 @@ export function WhyPostQuantum() {
   return (
     <section className="py-24 px-6 border-t border-white/5 relative" id="security">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <motion.div
+          className="text-center max-w-3xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="inline-flex items-center gap-2 neu-inset px-3 py-1 rounded-full text-xs font-mono text-neonPink border border-neonPink/20 mb-3">
             <span className="size-2 rounded-full bg-neonPink shadow-glow-pink"></span>
             <span>Cryptographic Threat Modeling</span>
@@ -17,10 +24,16 @@ export function WhyPostQuantum() {
           <p className="text-zinc-400 text-sm sm:text-base mt-2">
             Why single-signature ECDSA contracts fail enterprise standards in the post-quantum era.
           </p>
-        </div>
+        </motion.div>
 
         {/* Comparison Matrix Table in Neumorphic Panel */}
-        <div className="neu-panel rounded-3xl p-6 sm:p-8 border border-white/5 overflow-x-auto">
+        <motion.div
+          className="neu-panel rounded-3xl p-6 sm:p-8 border border-white/5 overflow-x-auto"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+        >
           <table className="w-full text-left text-sm border-collapse min-w-[620px]">
             <thead>
               <tr className="border-b border-white/10 text-xs font-mono text-zinc-400">
@@ -111,7 +124,7 @@ export function WhyPostQuantum() {
               Inspect Bytecode →
             </a>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

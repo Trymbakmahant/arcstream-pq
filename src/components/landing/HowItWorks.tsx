@@ -114,7 +114,13 @@ export function HowItWorks() {
       <div className="sticky top-20 z-20 flex min-h-[calc(100vh-5rem)] flex-col justify-center px-4 py-8 sm:px-6">
         <div className="max-w-6xl mx-auto w-full">
           {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+          <motion.div
+            className="text-center max-w-3xl mx-auto mb-10 sm:mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full neu-inset text-xs font-mono font-semibold text-neonLime mb-3">
               <span className="size-2 rounded-full bg-neonLime shadow-[0_0_8px_#d4ff3f]" />
               <span>Scroll-Driven Lifecycle Walkthrough</span>
@@ -147,7 +153,7 @@ export function HowItWorks() {
                 )}
               </span>
             </div>
-          </div>
+          </motion.div>
 
           {/* 3-Step Interactive Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">

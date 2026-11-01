@@ -1,4 +1,5 @@
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Link } from '@/lib/router'
 import { VAULT_ADDRESS } from '@/contracts/vault'
 import { NETWORK } from '@/lib/network'
@@ -9,10 +10,22 @@ export function SmartContractSection() {
   return (
     <section className="py-24 px-6 bg-[#080a0f] border-t border-white/5 relative" id="contract">
       <div className="max-w-6xl mx-auto">
-        <div className="neu-panel rounded-3xl p-8 sm:p-12 border border-white/10 relative overflow-hidden">
+        <motion.div
+          className="neu-panel rounded-3xl p-8 sm:p-12 border border-white/10 relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="pointer-events-none absolute -bottom-10 -right-10 w-80 h-80 bg-neonLime/10 rounded-full blur-3xl"></div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7">
+            <motion.div
+              className="lg:col-span-7"
+              initial={{ opacity: 0, x: -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
               <div className="inline-flex items-center gap-2 neu-inset px-3 py-1.5 rounded-full text-xs font-mono text-zinc-300 mb-4">
                 <span className="size-2 rounded-full bg-amber-400"></span>
                 <span>DoraHacks Arc Microgrants Round 2 Cohort</span>
@@ -41,8 +54,14 @@ export function SmartContractSection() {
                   <ArrowUpRight className="size-3.5 text-zinc-500" />
                 </a>
               </div>
-            </div>
-            <div className="lg:col-span-5 space-y-3">
+            </motion.div>
+            <motion.div
+              className="lg:col-span-5 space-y-3"
+              initial={{ opacity: 0, x: 15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
               <div className="neu-inset p-5 rounded-2xl border border-white/5">
                 <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-1">
                   <span>MAIN CONTRACT</span>
@@ -70,9 +89,9 @@ export function SmartContractSection() {
                   Circle USD Coin (USDC)
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

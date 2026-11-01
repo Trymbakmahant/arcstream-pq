@@ -144,7 +144,13 @@ export function Hero() {
       {/* PROTOCOL PILLARS / FEATURES SECTION */}
       <section className="py-24 px-6 border-t border-white/5 relative" id="features">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto">
+          <motion.div
+            className="text-center max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6 }}
+          >
             <p className="font-mono text-xs uppercase tracking-widest text-neonLime font-bold">Core Architecture</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
               Engineered for High-Stakes Milestone Settlement
@@ -153,11 +159,17 @@ export function Hero() {
               Combining post-quantum cryptography with deterministic state machines to eliminate client ghosting and key
               theft vulnerability.
             </p>
-          </div>
+          </motion.div>
 
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Pillar 1 */}
-            <div className="neu-panel neu-panel-hover rounded-3xl p-7 flex flex-col justify-between">
+            <motion.div
+              className="neu-panel neu-panel-hover rounded-3xl p-7 flex flex-col justify-between"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <div className="size-14 rounded-2xl neu-inset flex items-center justify-center text-neonLime">
@@ -177,10 +189,16 @@ export function Hero() {
                 <span>Direct ERC-20 debit</span>
                 <span className="text-neonLime font-semibold">Zero Slippage</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Pillar 2 */}
-            <div className="neu-panel neu-panel-hover rounded-3xl p-7 flex flex-col justify-between">
+            <motion.div
+              className="neu-panel neu-panel-hover rounded-3xl p-7 flex flex-col justify-between"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <div className="size-14 rounded-2xl neu-inset flex items-center justify-center text-neonPink">
@@ -200,10 +218,16 @@ export function Hero() {
                 <span>IPFS / Hash anchored</span>
                 <span className="text-neonPink font-semibold">Auto-Settlement</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Pillar 3 */}
-            <div className="neu-panel neu-panel-hover rounded-3xl p-7 flex flex-col justify-between">
+            <motion.div
+              className="neu-panel neu-panel-hover rounded-3xl p-7 flex flex-col justify-between"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <div className="size-14 rounded-2xl neu-inset flex items-center justify-center text-cyan-400">
@@ -223,7 +247,7 @@ export function Hero() {
                 <span>Precompile verified</span>
                 <span className="text-cyan-400 font-semibold">Passkey Biometric</span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>

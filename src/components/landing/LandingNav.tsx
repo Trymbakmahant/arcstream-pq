@@ -16,12 +16,9 @@ export function LandingNav() {
               <polygon points="12 2 20 7 4 7"></polygon>
             </svg>
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl font-extrabold tracking-tight text-white leading-none">ArcStream</span>
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-neonLime/15 text-neonLime border border-neonLime/30">PQ</span>
-            </div>
-            <span className="text-[11px] text-zinc-400 font-mono tracking-wide">USDC Escrow • Arc L1</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xl font-extrabold tracking-tight text-white leading-none">ArcStream</span>
+            <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-md bg-neonLime/15 text-neonLime border border-neonLime/30">PQ</span>
           </div>
         </Link>
 
