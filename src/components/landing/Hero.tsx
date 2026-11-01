@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, Coins, ExternalLink, Fingerprint, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowRight, ChevronDown, Coins, ExternalLink, Fingerprint, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { VAULT_ADDRESS, addressUrl } from '@/contracts/vault'
 import { Link } from '@/lib/router'

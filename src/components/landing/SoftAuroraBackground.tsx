@@ -121,10 +121,11 @@ export function SoftAuroraBackground() {
     const startTime = Date.now()
     let animationFrameId: number
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const render = () => {
       gl.uniform1f(uTimeLocation, (Date.now() - startTime) / 1000)
       gl.drawArrays(gl.TRIANGLES, 0, 6)
-      animationFrameId = requestAnimationFrame(render)
+      if (!reduceMotion) animationFrameId = requestAnimationFrame(render)
     }
     render()
 
