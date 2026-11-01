@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { VAULT_ADDRESS, addressUrl } from '@/contracts/vault'
 import { Link } from '@/lib/router'
 import { NETWORK } from '@/lib/network'
+import { SoftAuroraBackground } from '@/components/landing/SoftAuroraBackground'
 
 const explorerHref = VAULT_ADDRESS ? addressUrl(VAULT_ADDRESS) : NETWORK.explorerUrl
 
@@ -11,9 +12,8 @@ export function Hero() {
     <>
       {/* HERO SECTION */}
       <section className="relative pt-20 pb-24 px-6 overflow-hidden">
-        {/* Ambient glowing backdrops */}
-        <div className="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-gradient-to-b from-[#a3e635]/10 via-[#06b6d4]/5 to-transparent rounded-full blur-3xl opacity-70"></div>
-        <div className="pointer-events-none absolute top-40 right-10 w-96 h-96 bg-[#f43f5e]/10 rounded-full blur-3xl"></div>
+        {/* Soft Aurora WebGL Motion Background */}
+        <SoftAuroraBackground />
 
         <div className="max-w-6xl mx-auto text-center relative z-10">
           {/* FIPS 205 Badge */}
