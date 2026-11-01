@@ -1,9 +1,4 @@
-import { ArrowUpRight } from 'lucide-react'
 import { Link } from '@/lib/router'
-import { addressUrl, VAULT_ADDRESS } from '@/contracts/vault'
-import { NETWORK } from '@/lib/network'
-
-const explorerHref = VAULT_ADDRESS ? addressUrl(VAULT_ADDRESS) : NETWORK.explorerUrl
 
 export function LandingNav() {
   return (
@@ -45,28 +40,10 @@ export function LandingNav() {
           <a className="text-xs font-semibold text-zinc-300 hover:text-white tracking-wide transition-colors" href="#contract">
             Smart Contract
           </a>
-          <a className="text-xs font-semibold text-zinc-300 hover:text-white tracking-wide transition-colors flex items-center gap-1" href="https://docs.arc.io" rel="noopener noreferrer" target="_blank">
-            <span>Docs</span>
-            <ArrowUpRight className="size-3 text-zinc-500" />
-          </a>
         </nav>
 
-        {/* Action Area & Testnet Status */}
-        <div className="flex items-center gap-3.5">
-          <div className="hidden lg:flex items-center gap-2 neu-inset px-3 py-1.5 rounded-full text-xs font-mono text-zinc-300 border border-white/5">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>{NETWORK.label}</span>
-            <span className="text-zinc-600">|</span>
-            <span className="text-neonLime font-medium">FIPS 205 Active</span>
-          </div>
-          <a
-            className="hidden sm:inline-flex neu-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-200"
-            href={explorerHref}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Explorer
-          </a>
+        {/* Action Area */}
+        <div className="flex items-center gap-3">
           <Link
             to="/dashboard"
             className="neu-btn-primary px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 tracking-wide"
