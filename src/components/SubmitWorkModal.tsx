@@ -53,7 +53,7 @@ function SubmitForm({ target, onClose, onSubmit }: { target: Target; onClose: ()
 
   return (
     <motion.form
-      className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
+      className="neu-card w-full max-w-md rounded-3xl border border-white/10 p-6 shadow-2xl"
       initial={{ y: 24 }}
       animate={{ y: 0 }}
       exit={{ y: 24 }}

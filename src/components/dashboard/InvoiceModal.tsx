@@ -56,14 +56,14 @@ function InvoiceDialog({ target, onClose }: { target: { escrow: EscrowView; inde
       aria-label="Invoice and receipt"
     >
       <motion.div
-        className="invoice-panel neu-card flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111111] shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
+        className="invoice-panel neu-card flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-white/10 shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
         initial={{ y: 16, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
         exit={{ y: 16, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 380, damping: 34 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5 py-3 bg-[#111111]">
+        <div className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5 py-3.5 bg-[#0a0d14]/70">
           <h2 className="display text-lg font-bold text-white">Invoice / Receipt</h2>
           <div className="flex items-center gap-2">
             <button

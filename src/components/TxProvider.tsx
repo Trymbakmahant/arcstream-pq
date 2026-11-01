@@ -113,7 +113,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
             aria-label="Transaction progress"
           >
             <motion.div
-              className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
+              className="neu-card w-full max-w-md rounded-3xl border border-white/10 p-6 shadow-2xl"
               initial={{ y: 16, scale: 0.98 }}
               animate={{ y: 0, scale: 1 }}
               exit={{ y: 16, scale: 0.98 }}
@@ -130,13 +130,13 @@ export function TxProvider({ children }: { children: ReactNode }) {
                       RPC: {NETWORK.rpcUrl.replace('https://', '')}
                     </span>
                   </div>
-                  <h2 className="display mt-1.5 text-xl font-bold text-white">{flow.title}</h2>
+                  <h2 className="display mt-1.5 text-xl font-bold text-white tracking-tight">{flow.title}</h2>
                 </div>
                 {flow.finished && (
                   <button
                     type="button"
                     onClick={() => setFlow(null)}
-                    className="neu-card flex size-11 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
+                    className="neu-card flex size-10 items-center justify-center rounded-xl border border-white/5 text-zinc-400 hover:text-white"
                     aria-label="Close"
                   >
                     <X className="size-5" />
@@ -148,7 +148,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
                 {flow.steps.map((step, index) => (
                   <li
                     key={`${step.label}-${index}`}
-                    className="neu-sunken flex items-center gap-3 rounded-2xl border border-white/5 bg-[#0b0b0b] p-3"
+                    className="neu-sunken flex items-center gap-3 rounded-2xl border border-white/5 p-3"
                   >
                     <StepIcon status={step.status} />
                     <div className="min-w-0 flex-1">
@@ -170,7 +170,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
               </ol>
 
               {flow.error && (
-                <div className="neu-sunken mt-4 rounded-2xl border border-neonPink/40 bg-[#0b0b0b] p-3.5 text-sm font-medium text-neonPink shadow-glow-pink">
+                <div className="neu-sunken mt-4 rounded-2xl border border-neonPink/40 p-3.5 text-sm font-medium text-neonPink shadow-glow-pink">
                   <p className="flex items-start gap-2">
                     <TriangleAlert className="mt-0.5 size-4 shrink-0 text-neonPink" />
                     <span>{flow.error}</span>
@@ -180,7 +180,7 @@ export function TxProvider({ children }: { children: ReactNode }) {
                       <summary className="cursor-pointer font-semibold opacity-80 hover:opacity-100 text-zinc-300">
                         View raw error details (also logged to console)
                       </summary>
-                      <pre className="neu-sunken mt-2 max-h-40 overflow-auto rounded-lg border border-white/5 bg-black p-2.5 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap select-all text-zinc-300">
+                      <pre className="neu-sunken mt-2 max-h-40 overflow-auto rounded-lg border border-white/5 p-2.5 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap select-all text-zinc-300">
                         {flow.rawError}
                       </pre>
                     </details>

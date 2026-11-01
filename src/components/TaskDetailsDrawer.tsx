@@ -56,7 +56,7 @@ export function TaskDetailsDrawer({ target, escrow, onClose, onSubmitWork, onPqA
             role="dialog"
             aria-modal="true"
             aria-label="Milestone details"
-            className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-white/5 bg-[#0e0e0e]"
+            className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-white/5 bg-[#0b0e14]"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -113,7 +113,7 @@ function DrawerBody({
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-white/5 bg-[#0e0e0e] p-6">
+      <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-white/5 bg-[#0b0e14] p-6">
         <div className="min-w-0">
           <p className="label-caps text-zinc-500">
             Escrow #{escrow.id.toString()} / Milestone {target.index + 1}
@@ -142,7 +142,7 @@ function DrawerBody({
 
         <section>
           <h3 className="label-caps text-zinc-500">Deliverables and scope</h3>
-          <div className="neu-sunken mt-2 rounded-2xl border border-white/5 bg-[#0b0b0b] p-4 text-zinc-200">
+          <div className="neu-sunken mt-2 rounded-2xl border border-white/5 p-4 text-zinc-200">
             <RichText text={milestone.description || 'No description was provided.'} />
           </div>
         </section>
@@ -205,7 +205,7 @@ function DrawerBody({
         </p>
       </div>
 
-      <div className="sticky bottom-0 flex flex-wrap gap-3 border-t border-white/5 bg-[#0e0e0e] p-6">
+      <div className="sticky bottom-0 flex flex-wrap gap-3 border-t border-white/5 bg-[#0b0e14] p-6">
         {target.role === 'employer' && status === 'WORK SUBMITTED' && (
           <button
             type="button"

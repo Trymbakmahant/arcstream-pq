@@ -61,7 +61,7 @@ export function NetworkSwitcher({ wrongNetwork }: { wrongNetwork: boolean }) {
           <ul
             role="listbox"
             aria-label="Select network"
-            className="neu-card absolute left-0 z-50 mt-2 w-72 rounded-2xl border border-white/10 bg-[#111111] p-2 shadow-2xl"
+            className="neu-card absolute left-0 z-50 mt-2 w-72 rounded-2xl border border-white/10 p-2 shadow-2xl"
           >
             {ORDER.map((id) => {
               const net = NETWORKS[id]
@@ -114,7 +114,7 @@ function MainnetConfirm({ open, onClose }: { open: boolean; onClose: () => void 
           aria-label="Switch to Arc Mainnet"
         >
           <motion.div
-            className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
+            className="neu-card w-full max-w-md rounded-3xl border border-white/10 p-6 shadow-2xl"
             initial={{ y: 16, scale: 0.98 }}
             animate={{ y: 0, scale: 1 }}
             exit={{ y: 16, scale: 0.98 }}
@@ -124,14 +124,14 @@ function MainnetConfirm({ open, onClose }: { open: boolean; onClose: () => void 
               <span className="flex size-10 items-center justify-center rounded-xl bg-neonPink/20 border border-neonPink/30 text-neonPink shadow-glow-pink">
                 <TriangleAlert className="size-5" />
               </span>
-              <h2 className="display text-xl font-bold text-white">Switch to Arc Mainnet?</h2>
+              <h2 className="display text-xl font-bold text-white tracking-tight">Switch to Arc Mainnet?</h2>
             </div>
             <p className="mt-4 text-sm text-zinc-400">
               Arc Mainnet uses real USDC, and transactions cannot be reversed. ArcStreamVault has not had an
               independent professional audit. Use small amounts and review every address before you confirm.
             </p>
             {!NETWORKS.mainnet.vault && (
-              <p className="neu-sunken mt-3 rounded-xl border border-white/5 bg-[#0b0b0b] p-3 text-sm text-amber-400">
+              <p className="neu-sunken mt-3 rounded-xl border border-white/5 p-3 text-sm text-amber-400">
                 ArcStreamVault is not deployed on Arc Mainnet yet, so the dashboard will be empty until it is.
               </p>
             )}
@@ -182,7 +182,7 @@ export function SwitchNetworkButton({
 export function MainnetBanner() {
   if (!NETWORK.isMainnet) return null
   return (
-    <div className="neu-card flex flex-wrap items-center justify-center gap-2 border-b border-neonPink/30 bg-[#111111] px-4 py-2 text-center text-xs font-semibold text-neonPink shadow-glow-pink">
+    <div className="neu-card flex flex-wrap items-center justify-center gap-2 border-b border-neonPink/30 px-4 py-2 text-center text-xs font-semibold text-neonPink shadow-glow-pink">
       <TriangleAlert className="size-4" />
       Arc Mainnet: real USDC, irreversible transactions.
       <button type="button" className="underline underline-offset-4 hover:text-white" onClick={() => switchNetwork('testnet')}>

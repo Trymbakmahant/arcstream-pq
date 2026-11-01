@@ -85,7 +85,7 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
 
   return (
     <motion.div
-      className="neu-card w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-6 shadow-2xl"
+      className="neu-card w-full max-w-md rounded-3xl border border-white/10 p-6 shadow-2xl"
       initial={{ y: 16, scale: 0.98 }}
       animate={{ y: 0, scale: 1 }}
       exit={{ y: 16, scale: 0.98 }}
@@ -148,7 +148,7 @@ function AuthPanel({ request, onClose }: { request: PqAuthRequest; onClose: () =
       </ol>
 
       {error && (
-        <p className="neu-sunken mt-4 flex items-start gap-2 rounded-xl border border-neonPink/40 bg-[#0b0b0b] p-3 text-sm font-medium text-neonPink shadow-glow-pink">
+        <p className="neu-sunken mt-4 flex items-start gap-2 rounded-xl border border-neonPink/40 p-3 text-sm font-medium text-neonPink shadow-glow-pink">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           {error}
         </p>
@@ -205,7 +205,7 @@ function Layer({
   failLabel: string
 }) {
   return (
-    <li className="neu-sunken flex items-center gap-3 rounded-xl border border-white/5 bg-[#0b0b0b] p-3">
+    <li className="neu-sunken flex items-center gap-3 rounded-xl border border-white/5 p-3">
       <span className="neu-card flex size-8 shrink-0 items-center justify-center rounded-lg border border-neonPink/30 text-neonPink">
         {icon}
       </span>
