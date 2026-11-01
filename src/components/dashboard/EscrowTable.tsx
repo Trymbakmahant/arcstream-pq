@@ -37,7 +37,7 @@ const STATUS_COPY: Record<MilestoneStatus, { employer: string; contractor: strin
   PENDING: {
     employer: 'Pending Work',
     contractor: 'Work Due',
-    className: 'neu-sunken border border-white/5 text-amber-400',
+    className: 'neu-sunken border border-amber-500/20 text-amber-400 bg-amber-400/5',
   },
   CLOSED: {
     employer: 'Closed',
@@ -67,7 +67,7 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[56rem] border-collapse text-left">
-        <thead>
+        <thead className="label-caps text-zinc-500 border-b border-white/5 bg-[#0a0d14]/60">
           <tr className="label-caps text-zinc-500 border-b border-white/5">
             <th scope="col" className="px-6 py-4 font-semibold">Counterparty / Recipient</th>
             <th scope="col" className="px-4 py-4 font-semibold">Milestone</th>
@@ -77,7 +77,7 @@ export function EscrowTable({ rows, onSubmitWork, onViewDetails, onPqAuth }: Pro
             <th scope="col" className="px-6 py-4 text-right font-semibold">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-white/5">
           {rows.map((row) => {
             const { escrow, index, role, milestone, status } = row
             const key = row.key

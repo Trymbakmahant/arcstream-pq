@@ -33,19 +33,19 @@ export function Sidebar({ open, onClose, onCreate, onFund }: Props) {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-white/5 bg-[#0e0e0e] p-4 transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-white/5 bg-[#0b0e14] p-4 transition-transform lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="Sidebar"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-[#111111] border border-neonLime/30 text-neonLime shadow-glow-lime">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#11151f] border border-neonLime/30 text-neonLime shadow-glow-lime">
               <ShieldCheck className="size-5" />
             </span>
             <div>
-              <p className="display text-base font-bold leading-none text-white">ArcStream-PQ</p>
-              <p className="mt-1 text-[0.6875rem] leading-tight text-zinc-400">USDC Milestone Escrows</p>
+              <p className="display text-base font-bold leading-none text-white tracking-tight">ArcStream-PQ</p>
+              <p className="mt-1 text-[0.6875rem] font-mono leading-tight text-zinc-400">USDC Milestone Escrows</p>
             </div>
           </div>
           <button

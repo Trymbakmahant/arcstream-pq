@@ -83,7 +83,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
       </div>
 
       {escrow.isPQProtected && (
-        <div className="neu-sunken mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neonPink/40 bg-[#0b0b0b] px-4 py-3 text-white shadow-glow-pink">
+        <div className="neu-sunken mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neonPink/40 px-4 py-3 text-white shadow-glow-pink">
           <Fingerprint className="size-5 shrink-0 text-neonPink" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold tracking-[0.08em] text-neonPink">PQ-2FA SECURED</p>
@@ -116,7 +116,7 @@ export function EscrowCard({ escrow, role, onSubmitWork, onViewDetails, onPqAuth
           const status = milestoneStatus(escrow, m)
           const key = `${escrow.id}-${index}`
           return (
-            <li key={key} className="neu-sunken rounded-2xl border border-white/5 bg-[#0b0b0b] p-4">
+            <li key={key} className="neu-sunken rounded-2xl border border-white/5 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-white">

@@ -64,7 +64,7 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
         <div
           role="tablist"
           aria-label="Escrow filter"
-          className="neu-sunken inline-flex max-w-full flex-wrap rounded-2xl border border-white/5 p-1"
+          className="neu-sunken inline-flex max-w-full flex-wrap rounded-2xl border border-white/5 p-1 gap-1"
         >
           {TABS.map(({ id, label }) => {
             const active = tab === id
@@ -97,7 +97,7 @@ export function EscrowsPanel({ rows, query, loading, error, onCreate, onSubmitWo
         </div>
 
         <div className="flex items-center gap-2">
-          <div role="group" aria-label="View" className="neu-sunken inline-flex rounded-xl border border-white/5 p-1">
+          <div role="group" aria-label="View" className="neu-sunken inline-flex rounded-xl border border-white/5 p-1 gap-1">
             {(
               [
                 { id: 'grid', label: 'Card view', icon: LayoutGrid },

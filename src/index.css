@@ -102,31 +102,33 @@ body {
 
   /* Surface: Extruded Card (Convex) */
   .neu-card {
-    background: #111111;
-    box-shadow: 6px 6px 14px #040404, -5px -5px 12px rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(145deg, #13171f, #0d1017);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.7), -3px -3px 8px rgba(255, 255, 255, 0.025);
   }
 
   .neu-card-sm {
-    background: #111111;
-    box-shadow: 4px 4px 10px #040404, -3px -3px 8px rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(145deg, #13171f, #0d1017);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.7), -2px -2px 6px rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.07);
   }
 
   /* Surface: Sunken Terminal / Screen (Inset) */
   .neu-sunken {
-    background: #0b0b0b;
-    box-shadow: inset 4px 4px 10px #020202, inset -4px -4px 10px rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    background: #090c12;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.75), inset -2px -2px 5px rgba(255, 255, 255, 0.025);
   }
 
   /* Neon Accents Glow */
-  .glow-pink {
-    box-shadow: 0 0 15px rgba(255, 45, 171, 0.4);
+  .glow-pink,
+  .shadow-glow-pink {
+    box-shadow: 0 0 16px -2px rgba(244, 63, 94, 0.45);
   }
 
-  .glow-lime {
-    box-shadow: 0 0 15px rgba(212, 255, 63, 0.4);
+  .glow-lime,
+  .shadow-glow-lime {
+    box-shadow: 0 0 16px -2px rgba(212, 255, 63, 0.45);
   }
 
   .field {
@@ -134,8 +136,8 @@ body {
     min-height: 44px;
     border-radius: 0.75rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #0b0b0b;
-    box-shadow: inset 4px 4px 10px #020202, inset -4px -4px 10px rgba(255, 255, 255, 0.02);
+    background: #090c12;
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.75), inset -2px -2px 5px rgba(255, 255, 255, 0.025);
     padding: 0.625rem 0.875rem;
     color: #f3f4f6;
     outline: none;
@@ -148,7 +150,7 @@ body {
 
   .field:focus {
     border-color: #d4ff3f;
-    box-shadow: inset 4px 4px 10px #020202, 0 0 14px rgba(212, 255, 63, 0.35);
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.75), 0 0 16px -2px rgba(212, 255, 63, 0.45);
   }
 
   .btn-primary {
@@ -157,20 +159,20 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.875rem;
-    background: #d4ff3f;
-    border: 1px solid #d4ff3f;
-    padding: 0.5rem 1.25rem;
-    font-size: 0.875rem;
+    background-color: #d4ff3f;
+    color: #080a0f;
     font-weight: 700;
-    color: #0b0b0b;
-    box-shadow: 0 0 15px rgba(212, 255, 63, 0.4);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0 20px rgba(212, 255, 63, 0.35);
+    transition: all 0.2s ease;
   }
 
   .btn-primary:hover:not(:disabled) {
+    background-color: #bbf426;
+    box-shadow: 0 0 24px rgba(212, 255, 63, 0.55);
     transform: translateY(-1px);
-    box-shadow: 0 0 25px rgba(212, 255, 63, 0.65);
   }
 
   .btn-primary:active:not(:disabled) {
@@ -190,20 +192,28 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.875rem;
-    background: #ff2dab;
-    border: 1px solid #ff2dab;
-    padding: 0.5rem 1.25rem;
+    background-color: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
-    font-weight: 700;
-    color: #ffffff;
-    box-shadow: 0 0 15px rgba(255, 45, 171, 0.4);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    border-radius: 0.75rem;
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+    transition: all 0.2s ease;
   }
 
   .btn-pink:hover:not(:disabled) {
+    background-color: rgba(244, 63, 94, 0.25);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.45);
+    border-color: rgba(244, 63, 94, 0.6);
     transform: translateY(-1px);
-    box-shadow: 0 0 25px rgba(255, 45, 171, 0.65);
+  }
+
+  .btn-pink:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    box-shadow: none;
   }
 
   .btn-ghost {
@@ -212,21 +222,20 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.875rem;
+    background: #11151f;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #111111;
-    box-shadow: 4px 4px 10px #040404, -3px -3px 8px rgba(255, 255, 255, 0.03);
+    color: #e4e4e7;
+    font-weight: 500;
     padding: 0.5rem 1.1rem;
     font-size: 0.875rem;
-    font-weight: 600;
-    color: #f3f4f6;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
   }
 
   .btn-ghost:hover:not(:disabled) {
-    border-color: rgba(212, 255, 63, 0.4);
-    box-shadow: 4px 4px 10px #040404, 0 0 12px rgba(212, 255, 63, 0.25);
-    color: #d4ff3f;
+    background: #181d29;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
   }
 
   .btn-ghost:disabled {

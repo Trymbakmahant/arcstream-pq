@@ -54,7 +54,7 @@ function DashboardContent() {
     setDetails({ escrowId: escrow.id, index, role })
 
   return (
-    <div className="min-h-dvh bg-brandMain">
+    <div className="min-h-dvh bg-brandMain text-zinc-100 font-sans antialiased selection:bg-neonLime selection:text-black">
       <Sidebar
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
